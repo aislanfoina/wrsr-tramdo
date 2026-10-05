@@ -1,0 +1,18 @@
+# build output (plugins, previews, scratch)
+build/
+*.dll
+*.exp
+*.lib
+*.obj
+*.pdb
+
+# python
+__pycache__/
+*.pyc
+
+# editors / OS
+.vs/
+.vscode/
+*.swp
+Thumbs.db
+desktop.ini

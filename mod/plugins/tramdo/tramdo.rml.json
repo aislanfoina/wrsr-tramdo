@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "tram-do.tramdo",
+  "name": "Tram Distribution Office",
+  "version": "0.1.0",
+  "author": "Aislan",
+  "description": "A tram distribution office: the game's train distribution office, opened to cargo trams (vehicles of the tram train group) and closed to mainline trains.",
+  "dll": "tramdo.dll",
+  "loaderApi": { "min": 1, "max": 1 },
+  "supportedGameVersions": ["1.1.1.9"],
+  "requiredSymbols": [], "optionalSymbols": [],
+  "hookIntents": [
+    { "symbol": "wrsr.observed.rva_003e2900", "interaction": "pre-hook", "phase": "runtime", "temperature": "UNKNOWN" }
+  ],
+  "dependencies": [], "conflicts": [], "loadBefore": [], "loadAfter": [],
+  "defaultPriority": 9780,
+  "enabledByDefault": true
+}

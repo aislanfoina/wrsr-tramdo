@@ -1,0 +1,3 @@
+# Every change to main needs the owner's approval (main's branch protection requires
+# a code-owner review). Other branches list the owner as reviewer but don't require it.
+* @aislanfoina

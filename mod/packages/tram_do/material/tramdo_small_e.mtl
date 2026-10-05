@@ -1,0 +1,144 @@
+$SUBMATERIAL sr_concrete
+$TEXTURE_MTL 0 sr_concrete.dds
+$TEXTURE_MTL 1 sr_black.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.3 0.3 0.3 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$SUBMATERIAL sr_white
+$TEXTURE_MTL 0 sr_white.dds
+$TEXTURE_MTL 1 sr_black.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.8 0.8 0.8 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$SUBMATERIAL sr_grey
+$TEXTURE_MTL 0 sr_grey.dds
+$TEXTURE_MTL 1 sr_black.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.3 0.3 0.3 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$SUBMATERIAL sr_red
+$TEXTURE_MTL 0 sr_red.dds
+$TEXTURE_MTL 1 sr_black.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.3 0.3 0.3 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$SUBMATERIAL sr_glass
+$TEXTURE_MTL 0 sr_glass.dds
+$TEXTURE_MTL 1 sr_glass_e.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.3 0.3 0.3 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$SUBMATERIAL sr_stucco
+$TEXTURE_MTL 0 sr_stucco.dds
+$TEXTURE_MTL 1 sr_stucco_e.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.3 0.3 0.3 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$SUBMATERIAL sr_brick
+$TEXTURE_MTL 0 sr_brick.dds
+$TEXTURE_MTL 1 sr_black.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.3 0.3 0.3 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$SUBMATERIAL sr_roof
+$TEXTURE_MTL 0 sr_roof.dds
+$TEXTURE_MTL 1 sr_black.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.3 0.3 0.3 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$SUBMATERIAL sr_metal
+$TEXTURE_MTL 0 sr_metal.dds
+$TEXTURE_MTL 1 sr_black.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.8 0.8 0.8 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$SUBMATERIAL sr_dark
+$TEXTURE_MTL 0 sr_dark.dds
+$TEXTURE_MTL 1 sr_black.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.3 0.3 0.3 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$SUBMATERIAL sr_glow
+$TEXTURE_MTL 0 sr_glow.dds
+$TEXTURE_MTL 1 sr_glow.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.3 0.3 0.3 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$SUBMATERIAL sr_corr
+$TEXTURE_MTL 0 sr_corr.dds
+$TEXTURE_MTL 1 sr_black.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.3 0.3 0.3 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$SUBMATERIAL sr_hazard
+$TEXTURE_MTL 0 sr_hazard.dds
+$TEXTURE_MTL 1 sr_black.dds
+$TEXTURE 2 buildings/blankbump.dds
+
+$DIFFUSECOLOR 0.92 0.92 0.92 1.0
+$SPECULARCOLOR 0.3 0.3 0.3 1.0
+$AMBIENTCOLOR 1.0 1.0 1.0 1.0
+
+$SPECULARPOWER 4.0
+
+$END
