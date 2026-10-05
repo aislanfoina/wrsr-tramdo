@@ -39,7 +39,7 @@ mod/plugins/tramdo/      tramdo.cpp (the whole plugin), tramdo.ini (settings), t
                          id tram-do.tramdo, priority 9780), package.txt ("tram_do": ships inside that item)
 mod/packages/tram_do/    the item: tramdo_small/ and tramdo_large/ (model.nmf, building.ini, renderconfig.ini,
                          building.bbox, building.fire, imagegui.png), material/ (shared .mtl + .dds),
-                         workshopconfig.ini (local id 9000310), previewimage.png
+                         workshopconfig.ini (Steam id 3814373926), previewimage.png
 tools/tramdo_layout.py   the layout: tram_depo_small.ini's geometry lines, x stretched (SIZES: 1.0 / 1.5)
 tools/tramdo_scene.py    Blender: the buildings, building.ini, previews (+ preview-only track, see 5)
 tools/tramdo_workshop.py item config, store page (Steam BBCode), poster; workshop_items() for the uploader
@@ -52,9 +52,9 @@ tools/dev/               memprobe.py (read-only process memory), rml_launch.py, 
 ## 4. Build, install, run
 
 - `.\build.ps1` compiles every `mod\plugins\*` into `build\`; `-Install` (game and RML closed) copies
-  `mod\packages\tram_do` to `<game>\media_soviet\workshop_wip\9000310`, the plugin into its
+  `mod\packages\tram_do` to `<game>\media_soviet\workshop_wip\3814373926`, the plugin into its
   `plugins\`. Staged copy then swap: RML once scanned an item mid-copy and missed its plugins.
-- In RML: Development tab (untick *Hide Disabled*), enable item 9000310 and the `tramdo` plugin.
+- In RML: Development tab (untick *Hide Disabled*), enable item 3814373926 and the `tramdo` plugin.
   Changing that is the owner's call.
 - The loader log `rml/logs/rml-runtime.log` shows `tramdo` lines: hooks (chained or not), the tram
   group id, length limits, the first `log_decisions` admit/refuse decisions, the fuel bypass.
@@ -128,8 +128,8 @@ tram office, so the old test buildings tramdo_a..d are covered too), `log_decisi
 ## 8. Saves and compatibility
 
 A save stores buildings by ident `<item id>/<object>`: moving the objects to another item id (the
-Steam id on publishing) orphans them in old saves. The local id is 9000310 until the item exists on
-Steam. The plugin only answers for `tramdo*` buildings and chains every other call, so other
+Steam id on publishing) orphans them in old saves. The item is 3814373926 on Steam (created unpublished
+2026-10-05; it was local id 9000310 before, so buildings placed from that are orphaned). The plugin only answers for `tramdo*` buildings and chains every other call, so other
 plugins hooking the same functions keep working.
 
 ## 9. Testing (what was done)
@@ -167,8 +167,10 @@ limit (the H51 large set refused by the small yard, medium sets admitted).
 
 - Core office: done (purchase, assignment, parking, dispatch, full cycles).
 - Yards, size limit, cargo-only filter: built, to be tested in game (section 9).
-- Workshop: not published. `python tools/workshop_upload.py tram_do create` (owner) gives the Steam
-  id for `ITEMS` in tools/tramdo_workshop.py; then rebuild, install and upload.
+- Workshop: item 3814373926 created in the game 2026-10-05, **unpublished**, content not uploaded
+  yet. To upload: close the game and RML, `.\build.ps1 -Install`, start the game from Steam
+  *without* RML (an item whose plugin DLL is loaded fails with Error code 2), Workshop -> Your
+  items (WIP) -> the item -> Save changes. Visibility stays as `VISIBILITY` in tramdo_workshop.py.
 - Open: over-dispatch (fleet tally skips trams); wagons listed as separate office entries
   (cosmetic); the fuel toggle assumes no parallel building updates; the office judges a station
   fed through a conveyor *transfer* by the transfer (looks full).

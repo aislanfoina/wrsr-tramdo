@@ -7,6 +7,8 @@ the primary monitor scaled, crop regions at full resolution, click, keys, text.
     python tools/dev/gdrive.py move X Y
     python tools/dev/gdrive.py key ESC|ENTER|...   (space separated list)
     python tools/dev/gdrive.py type "text"
+    python tools/dev/gdrive.py stype "Text [1.1]"      (in-game text boxes: scan codes, Shift included)
+    python tools/dev/gdrive.py openfile "C:\\dir\\file.png" (the Windows Open dialog of a browse button)
     python tools/dev/gdrive.py wheel X Y N
 Coordinates are physical pixels of the primary monitor (5120x1440)."""
 import ctypes, ctypes.wintypes as w, subprocess, sys, time
@@ -128,11 +130,44 @@ if __name__ == '__main__':
         fg(); type_text(a[1]); print('typed', a[1])
     elif cmd == 'hold':          # hold KEY secs - by scan code, which the game's DirectInput sees (plain `key` is ignored in game)
         fg(); hold(a[1], float(a[2]) if len(a) > 2 else 0.12); print('held', a[1])
-    elif cmd == 'stype':         # stype "text" - letters/digits/space as scan-code key presses (in-game text boxes ignore `type`)
+    elif cmd == 'stype':         # stype "Text [1.1]" - scan-code key presses, Shift included (in-game text boxes ignore `type`)
         fg()
+        sh = u.MapVirtualKeyW(0x10, 0)
         for ch in a[1]:
-            hold('SPACE' if ch == ' ' else ch, 0.04); time.sleep(0.04)
+            r = u.VkKeyScanW(ord(ch))
+            scan = u.MapVirtualKeyW(r & 0xFF, 0)
+            for code, flags in ([(sh, 0)] if r & 0x100 else []) + [(scan, 0), (scan, 2)] + ([(sh, 2)] if r & 0x100 else []):
+                i = _INPUT(type=1); i.ki = _KI(0, code, 0x0008 | flags, 0, None)
+                u.SendInput(1, ctypes.byref(i), ctypes.sizeof(_INPUT)); time.sleep(0.035)
         print('stype', a[1])
+    elif cmd == 'openfile':      # openfile "C:\path\file" - fill the game's Windows Open dialog (browse buttons) and press Open
+        dlgs = []
+
+        @ctypes.WINFUNCTYPE(ctypes.c_bool, w.HWND, w.LPARAM)
+        def _top(h, l):
+            c = ctypes.create_unicode_buffer(64); t = ctypes.create_unicode_buffer(128)
+            u.GetClassNameW(h, c, 64); u.GetWindowTextW(h, t, 128)
+            if c.value == '#32770' and t.value == 'Open' and u.IsWindowVisible(h):
+                dlgs.append(h)
+            return True
+        u.EnumWindows(_top, 0)
+        if not dlgs:
+            sys.exit('no Open dialog')
+        edits = []
+
+        @ctypes.WINFUNCTYPE(ctypes.c_bool, w.HWND, w.LPARAM)
+        def _child(h, l):
+            c = ctypes.create_unicode_buffer(64)
+            u.GetClassNameW(h, c, 64)
+            if c.value == 'Edit' and u.GetDlgCtrlID(u.GetParent(h)) == 0x47C:     # the file name box (cmb13)
+                edits.append(h)
+            return True
+        u.EnumChildWindows(dlgs[0], _child, 0)
+        if not edits:
+            sys.exit('file name box not found')
+        u.SendMessageW(edits[0], 0x000C, 0, ctypes.c_wchar_p(a[1])); time.sleep(0.3)   # WM_SETTEXT
+        u.SendMessageW(dlgs[0], 0x0111, 1, 0)                                          # WM_COMMAND IDOK
+        print('openfile', a[1])
     elif cmd == 'mhold':         # mhold X Y secs - left button held, e.g. "hold LMB to flatten terrain"
         fg(); u.SetCursorPos(int(a[1]), int(a[2])); time.sleep(0.15)
         u.mouse_event(2, 0, 0, 0, 0); time.sleep(float(a[3]) if len(a) > 3 else 1.0); u.mouse_event(4, 0, 0, 0, 0)

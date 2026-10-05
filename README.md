@@ -80,7 +80,7 @@ tasks, and sends a tram whenever a station has goods to move. No fixed routes, n
 
 Close the game and the loader first. Needs the MSVC x64 toolset (Visual Studio Build Tools,
 *Desktop development with C++*) and a Windows 10/11 SDK; `build.ps1` finds them itself. The item
-lands in `workshop_wip\9000310` with the plugin in its `plugins\` folder; enable both in Republic
+lands in `workshop_wip\3814373926` with the plugin in its `plugins\` folder; enable both in Republic
 Mod Loader's Development tab.
 
 ## REBUILDING THE CONTENT
