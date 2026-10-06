@@ -167,10 +167,11 @@ limit (the H51 large set refused by the small yard, medium sets admitted).
 
 - Core office: done (purchase, assignment, parking, dispatch, full cycles).
 - Yards, size limit, cargo-only filter: built, to be tested in game (section 9).
-- Workshop: item 3814373926 created in the game 2026-10-05, **unpublished**, content not uploaded
-  yet. To upload: close the game and RML, `.\build.ps1 -Install`, start the game from Steam
-  *without* RML (an item whose plugin DLL is loaded fails with Error code 2), Workshop -> Your
-  items (WIP) -> the item -> Save changes. Visibility stays as `VISIBILITY` in tramdo_workshop.py.
+- Workshop: item 3814373926 created and uploaded (content, both yards + plugin) 2026-10-05,
+  **unpublished**. To upload again: close the game and RML, `.\build.ps1 -Install`, start the game
+  from Steam *without* RML (an item whose plugin DLL is loaded fails with Error code 2), Workshop ->
+  Your items (WIP) -> click the item's picture (the magnifier only opens its Steam page) -> Save
+  changes. Visibility follows `VISIBILITY` in tramdo_workshop.py (0 = unpublished).
 - Open: over-dispatch (fleet tally skips trams); wagons listed as separate office entries
   (cosmetic); the fuel toggle assumes no parallel building updates; the office judges a station
   fed through a conveyor *transfer* by the transfer (looks full).
