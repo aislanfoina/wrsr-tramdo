@@ -78,7 +78,15 @@ skips vehicles whose fuel (vehicle+0x5F0) is <= 0 and tries to refuel them; elec
 +0x5F0 = 0, so trams never left. For our offices only, the plugin sets game+0x5B0 = 0 around the
 original call. Assumes building updates do not run in parallel threads.
 
-Both hooks chain after another plugin's 14-byte `FF 25 00000000 <addr>` jump or onto the live bytes.
+**Plugin, hook 3 - missing research 0x2F76C0**(game, building descriptor): fills game +0x11790
+(std::vector of research records) with the researches still blocking a building; the build menu
+treats a non-empty list as locked. A road office unlocks with `distribution_office` (it unlocks
+building type 0x2B); for our offices the plugin appends the `research` setting's record
+(`railway_distribution_office`) while it is unfinished, growing the vector with the game's own
+0x41A0 as the function itself does. The yards carry no `$STYLE_FLAG` (the vanilla office's
+`modern_industry` flag would also lock them behind the 1958 Modern Industry research).
+
+All hooks chain after another plugin's 14-byte `FF 25 00000000 <addr>` jump or onto the live bytes.
 
 **Models:** buildings only. The game draws the yard's tram track and trolley wire itself along
 `$CONNECTION_TRAMROAD_DEAD` / `$CONNECTION_TRAMTROLLEYS_DEAD`, joined with curves, on the terrain:
@@ -113,6 +121,12 @@ south-east corner beyond the exit curve, sand tower and a lamp in the south-west
   conveyor transfer building.
 - Dispatch: 0x1E5350(game, vehicle, office) -> 0x1E5480 / 0x1E5BA0 (route) -> 0x6B8EB0 (start).
 - Matcher 0x1DE2B0 gives waste transfers only to cargo class 0x11 vehicles.
+- Research: records in game +0x11778/+0x11780 (= exe+0x9E6688), 0xE8 bytes: name +0 (inline),
+  +0x60/+0x68 buildings it unlocks (all must be done), +0x78/+0x80 one-is-enough unlocks,
+  +0xA8/+0xB0 used by 0x2F7960, progress +0xD0 (>= 1.0 done). The parser 0x2F3C60 resolves
+  `$UNLOCK_BUILDING_TYPE` / `_STYLE_FLAG` (descriptor +0x20D) to descriptor pointers at load.
+  Building descriptors: exe+0x9E6A30 vector, 0xBE8 bytes, ident +0, type +0x360. game +0x1090 set
+  = research off. Unlocks: distribution_office -> type 43 (0x2B), railway_distribution_office -> 52.
 - "Some buildings have unsupported settings" / "unsupported with unloading" = status text from
   0x741170 (road office): UI only, dispatch still works.
 - Fleet tally 0x1E1740 counts vehicle kinds 1/6/8/10 only: kind 4 (trams) is not tallied, so the
@@ -120,6 +134,7 @@ south-east corner beyond the exit curve, sand tower and a lamp in the south-west
 
 ## 7. Settings (`mod/plugins/tramdo/tramdo.ini`)
 
+`research` (default `railway_distribution_office`; empty = only the road office's own research),
 `enabled`, `object_prefix` (default `tramdo`: every building whose object name starts with it is a
 tram office, so the old test buildings tramdo_a..d are covered too), `log_decisions`,
 `limit_<object> = metres` (`limit_tramdo_small = 30`). Small and medium cargo tram sets run

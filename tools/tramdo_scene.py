@@ -324,7 +324,7 @@ def mtl(names, emissive=False):
 
 def building_ini(key, lines):
     scale, name, _limit = L.SIZES[key]
-    out = ['$NAME_STR "%s"' % name, '$TYPE_DISTRIBUTION_OFFICE', '$SUBTYPE_TRAM', '$STYLE_FLAG modern_industry',
+    out = ['$NAME_STR "%s"' % name, '$TYPE_DISTRIBUTION_OFFICE', '$SUBTYPE_TRAM',
            '$MENU_SFX building_tram_depot', '$WORKING_VEHICLES_NEEDED %d' % VEHICLES[key], '']
     out += lines + ['']
     k = scale

@@ -31,6 +31,8 @@ tasks, and sends a tram whenever a station has goods to move. No fixed routes, n
   - *Tram Distribution Office (large trams)*: the same yard with lanes half as long again, room
     for 40 vehicles. Takes every cargo tram, including the long ones (35-41 m).
 
+  Both unlock with the **Railway distribution office** research.
+
   Both have a brick tram shed with open portals, the two-storey ТРАМГРУЗ (*tram freight*)
   dispatch wing, a traction substation and a sand tower. Like the game's own depots, the yard's
   track and trolley wire are laid by the game itself along the layout, with proper curves.
@@ -39,6 +41,7 @@ tasks, and sends a tram whenever a station has goods to move. No fixed routes, n
 - **The `tramdo` plugin**, which makes the office accept trams at all and keeps them moving:
   - only **cargo** trams may be bought or assigned (passenger trams stay with the tram depot),
     and the small yard turns away sets longer than its limit;
+  - the offices unlock with the railway distribution office research, like the train office;
   - the office's own planning runs with fuel switched off, because trams are electric and the
     office would otherwise wait for ever to refuel them.
 
