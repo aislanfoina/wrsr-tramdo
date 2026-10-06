@@ -322,18 +322,34 @@ def mtl(names, emissive=False):
     return '\r\n'.join(out)
 
 
+# Construction: fixed amounts per phase, not $COST_RESOURCE_AUTO. AUTO scales with the model, and
+# with the below-ground strips that stretch it over the whole yard it asked ~1300 t of concrete; the
+# game's train office costs 2791 workdays, 81 t concrete, 62 gravel, 49 asphalt, 159 bricks,
+# 53 boards, 19 steel. The small yard costs less than that, the large one (COST_SCALE) about as much.
+# Each phase: (work type, construction stops (x, z, x, z) from the game's tram depot, resources).
+COSTS = [
+    ('SOVIET_CONSTRUCTION_GROUNDWORKS 0.0', [(13.5, 1.1, 15.0, 0.8), (-23.6, 0.8, -24.9, 1.5)],
+     [('workers', 600), ('concrete', 50), ('gravel', 45), ('asphalt', 30)]),
+    ('SOVIET_CONSTRUCTION_BRICKS_LAYING 1.0', [(13.5, 1.1, 15.0, 0.8), (-23.6, 0.8, -24.9, 1.5),
+                                              (-29.5, -15.0, -31.0, -15.1), (25.5, -13.8, 26.9, -14.3)],
+     [('workers', 1200), ('bricks', 110), ('boards', 35)]),
+    ('SOVIET_CONSTRUCTION_STEEL_LAYING 1.0', [(-27.5, 1.0, -26.0, 1.0), (25.5, -13.8, 26.9, -14.3)],
+     [('workers', 400), ('steel', 14)]),
+]
+COST_SCALE = {'tramdo_small': 1.0, 'tramdo_large': 1.25}
+
+
 def building_ini(key, lines):
     scale, name, _limit = L.SIZES[key]
     out = ['$NAME_STR "%s"' % name, '$TYPE_DISTRIBUTION_OFFICE', '$SUBTYPE_TRAM',
            '$MENU_SFX building_tram_depot', '$WORKING_VEHICLES_NEEDED %d' % VEHICLES[key], '']
     out += lines + ['']
-    k = scale
-    out += ['-------', '$COST_WORK SOVIET_CONSTRUCTION_GROUNDWORKS 0.0', '$COST_WORK_BUILDING_ALL',
-            '$COST_RESOURCE_AUTO ground_asphalt %.2f' % (2.0 * k),
-            '------------------', '$COST_WORK SOVIET_CONSTRUCTION_BRICKS_LAYING 1.0', '$COST_WORK_BUILDING_ALL',
-            '$COST_RESOURCE_AUTO wall_brick %.2f' % (1.0 * k),
-            '------------------', '$COST_WORK SOVIET_CONSTRUCTION_STEEL_LAYING 1.0', '$COST_WORK_BUILDING_ALL',
-            '$COST_RESOURCE_AUTO electro_steel %.2f' % (0.7 * k), '-----------------------', '', 'end', '']
+    k = COST_SCALE[key]
+    for work, stops, resources in COSTS:
+        out += ['------------------', '$COST_WORK ' + work, '$COST_WORK_BUILDING_ALL']
+        out += ['$COST_WORK_VEHICLE_STATION %.2f 0.0 %.2f %.2f 0.0 %.2f' % (x0 * scale, z0, x1 * scale, z1) for x0, z0, x1, z1 in stops]
+        out += ['$COST_RESOURCE %s %d' % (r, round(n * k)) for r, n in resources]
+    out += ['------------------', '', 'end', '']
     return '\r\n'.join(out)
 
 
