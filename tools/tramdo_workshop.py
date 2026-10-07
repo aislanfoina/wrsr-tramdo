@@ -2,6 +2,7 @@
 
     python tools/tramdo_workshop.py           # workshopconfig.ini + previewimage.png -> mod/packages/tram_do
     python tools/tramdo_workshop.py poster    # only the poster (build/tramdo/poster.png and the preview)
+    python tools/tramdo_workshop.py new       # the game's create-item form files -> build/workshop_new/tram_do
 
   tram_do   tramdo_small, tramdo_large (tools/tramdo_scene.py) + the tramdo plugin   WORKSHOP_ITEMTYPE_BUILDING
 
@@ -31,11 +32,12 @@ CARGO_TRAMS = 'https://steamcommunity.com/workshop/filedetails/?id=3586298879'
 ITEM_URL = 'https://steamcommunity.com/sharedfiles/filedetails/?id=%d'
 PREVIEWS = os.path.join(ROOT, 'build', 'tramdo')
 
-# key: (folder, item id, item type, name). A local development id until the item exists on Steam.
+# key: (folder, Steam item id, item type, name). Created in the game 2026-10-05 (was local 9000310).
 ITEMS = {
-    'tram_do': ('mod/packages/tram_do', 9000310, 'WORKSHOP_ITEMTYPE_BUILDING', 'Tram Distribution Office [1.1.1.9]'),
+    'tram_do': ('mod/packages/tram_do', 3814373926, 'WORKSHOP_ITEMTYPE_BUILDING', 'Tram Distribution Office [1.1.1.9]'),
 }
 OBJECTS = {'tram_do': ['tramdo_small', 'tramdo_large']}
+TAGS = {'tram_do': 13}          # the create form's tag bits as the game writes them: 13 = Depot
 REQUIRED = {'tram_do': [3787969749]}
 
 FOOTER = '''[h2]LICENCE AND CREDITS[/h2]
@@ -52,10 +54,10 @@ Your cargo trams have stood in the depot long enough, waiting for someone to tel
 
 [h2]TWO YARDS[/h2]
 [list]
-[*][b]Tram Distribution Office (small trams)[/b]: the game's small tram depot layout, four parking lanes, room for %(small)d vehicles. Takes cargo tram sets up to [b]30 m[/b] (the small and medium sets).
-[*][b]Tram Distribution Office (large trams)[/b]: the same yard with lanes half as long again for the long sets, room for %(large)d vehicles. Takes every cargo tram.
+[*][b]Tram Distribution Office (small trams)[/b]: the game's tram end station layout, [b]6 parking lanes[/b] of 38 m under a shed: up to 6 tram sets of up to [b]30 m[/b] (the small and medium sets).
+[*][b]Tram Distribution Office (large trams)[/b]: the game's big tram depot layout with longer lanes, [b]8 parking lanes[/b] of 50 m: up to 8 tram sets of any length.
 [/list]
-Both have a brick tram shed, the ТРАМГРУЗ dispatch wing, a traction substation and a sand tower. The game lays the yard's track and trolley wire itself, as with its own depots.
+Both unlock with the [b]Railway distribution office[/b] research. They have a brick tram shed, the ТРАМГРУЗ dispatch wing, a traction substation and a sand tower. The game lays the yard's track and trolley wire itself, as with its own depots.
 
 [h2]HOW TO RUN IT[/h2]
 [olist]
@@ -68,7 +70,7 @@ Requires Workers & Resources: Soviet Republic [b]1.1.1.9[/b]: the plugin patches
 [h2]GOOD TO KNOW[/h2]
 [list]
 [*]Cargo trams only: passenger trams stay with the tram depot.
-[*]Every wagon of a tram set takes one place in the office.
+[*]Each parking lane holds one tram set: when every lane is taken the office is full.
 [*]Gravel, fluids and other bulk goods leave an unloading tram station by conveyor or pipe. Run the conveyor [b]straight into the storage[/b]: with a conveyor transfer building in between, the office sees the transfer as full and keeps the trams at home. The yellow 'unsupported with unloading' note on such stations can be ignored.
 [*]Station thresholds work as with trucks: a station set to dispatch only at 20%% gets no tram before that.
 [*]The plugin runs the office's planning with fuel off (trams are electric, the game's office would wait forever to refuel them) and lets only cargo trams in. Without the plugin the offices take no trams at all.
@@ -81,7 +83,7 @@ Tested with open, covered, aggregate and waste trams. Fluid trams should work th
 
 
 def descriptions():
-    return {'tram_do': PAGE % {'img': IMAGES, 'rml': RML, 'trams': CARGO_TRAMS, 'small': 24, 'large': 40} + FOOTER}
+    return {'tram_do': PAGE % {'img': IMAGES, 'rml': RML, 'trams': CARGO_TRAMS, } + FOOTER}
 
 
 def workshop_items():
@@ -96,7 +98,8 @@ def config(key, desc):
     folder, item, typ, name = ITEMS[key]
     assert len(desc) < 8000, '%s: Steam descriptions stop at 8000 characters (%d)' % (key, len(desc))
     assert '"' not in desc, '%s: no double quotes inside $ITEM_DESC' % key
-    lines = ['$ITEM_ID %d' % item, '', '$OWNER_ID %d' % OWNER, '', '$ITEM_TYPE %s' % typ, '', '$VISIBILITY %d' % VISIBILITY, '']
+    lines = ['$ITEM_ID %d' % item, '', '$OWNER_ID %d' % OWNER, '', '$ITEM_TYPE %s' % typ, '', '$VISIBILITY %d' % VISIBILITY]
+    lines += ['$TAGS %d' % TAGS[key], ''] if key in TAGS else ['']
     lines += ['$OBJECT_BUILDING %s' % o for o in OBJECTS[key]] + ['']
     lines += ['$ITEM_NAME "%s"' % name, '', '$ITEM_DESC "%s"' % desc.replace('\n', '\r\n'), '', '$END', '']
     path = os.path.join(ROOT, folder, 'workshopconfig.ini')
@@ -139,9 +142,29 @@ def poster():
     print('poster   %4d KB  %s' % (os.path.getsize(path) // 1024, os.path.relpath(path, ROOT)))
 
 
+def new_items(out):
+    """What the game's "create new item" form asks for: one PNG and one UTF-8 TXT per item."""
+    os.makedirs(out, exist_ok=True)
+    descs = descriptions()
+    lines = ['Create each item in the game (Workshop -> Your items (WIP) -> green +), visibility Unpublished:', '']
+    for n, key in enumerate(ITEMS, 1):
+        folder, _item, typ, name = ITEMS[key]
+        base = '%d_%s' % (n, key)
+        png = os.path.join(ROOT, folder, 'previewimage.png')
+        assert os.path.getsize(png) < 1 << 20, '%s: the game refuses previews of 1 MB or more' % key
+        shutil.copy2(png, os.path.join(out, base + '.png'))
+        open(os.path.join(out, base + '.txt'), 'w', encoding='utf-8', newline='').write(descs[key].replace('\n', '\r\n'))
+        lines.append('%d. %-36s type %-8s image %s.png  description %s.txt'
+                     % (n, name, typ.replace('WORKSHOP_ITEMTYPE_', '').title(), base, base))
+    open(os.path.join(out, 'ITEMS.txt'), 'w', encoding='utf-8', newline='').write('\r\n'.join(lines + ['']))
+    print('\n'.join(lines) + '\n-> ' + out)
+
+
 def main():
     if sys.argv[1:2] == ['poster']:
         return poster()
+    if sys.argv[1:2] == ['new']:
+        return new_items(os.path.join(ROOT, 'build', 'workshop_new', 'tram_do'))
     descs = descriptions()
     for key in ITEMS:
         config(key, descs[key])
