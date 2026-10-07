@@ -139,7 +139,7 @@ search (`find_spot`, `obstacles`) finds room clear of every path, track, wire an
 
 `research` (default `railway_distribution_office`; empty = only the road office's own research),
 `enabled`, `object_prefix` (default `tramdo`: every building whose object name starts with it is a
-tram office, so the old test buildings tramdo_a..d are covered too), `log_decisions`,
+tram office), `log_decisions`,
 `limit_<object> = metres` (`limit_tramdo_small = 30`). Small and medium cargo tram sets run
 21-26 m, the large H51 sets 35-41 m.
 
@@ -152,7 +152,8 @@ plugins hooking the same functions keep working.
 
 ## 9. Testing (what was done)
 
-Experiments with the prototype item (workspace only, local id 9000300, the vanilla depot model):
+Experiments with a prototype item (workspace only, local id 9000300, the vanilla depot model, test
+offices tramdo_a..d; retired 2026-10-07):
 1. Train office + tram depot layout, no plugin: no trams offered, assignment refused.
 2. With the plugin: trams buyable and assignable, but the train office wants rail connections.
 3. Road office (C with `$SUBTYPE_TRAM`, D without): connections found, stations accepted as tasks;
