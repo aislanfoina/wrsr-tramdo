@@ -15,6 +15,7 @@ Publishing: tools/workshop_upload.py tram_do create (prints the Steam id - put i
 install, then upload content/preview/description. $VISIBILITY is the game's numbering: 0 unpublished,
 1 friends only, 2 PUBLIC.
 """
+import io
 import os
 import shutil
 import sys
@@ -133,13 +134,18 @@ def poster():
     T.ribbon(d, ((T.SIZE - lw) / 2, bottom + 24), label, lf)
     T.stamp(im, (T.SIZE - 150, 545), 78, ' TRAM DO · МОД · 2 YARDS ·', '1.1.1.9')
     T.frame(im)
-    im = T.paper(im.resize((T.SIZE, T.SIZE), Image.LANCZOS))
+    # No paper grain: the game re-encodes the preview itself when it uploads (an RGB PNG about as
+    # big as zlib level 6 makes), and the grain's noise pushed the poster to 1,063,902 bytes -
+    # "Limit Exceeded (Preview image too large? 1MB+) (Error code 25)". Steam's limit is 1 MiB.
+    im = im.resize((T.SIZE, T.SIZE), Image.LANCZOS)
     path = os.path.join(PREVIEWS, 'poster.png')
     im.save(path, optimize=True)
-    if os.path.getsize(path) >= 1000 * 1024:               # the game refuses previews of 1 MB or more
-        im.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.FLOYDSTEINBERG).save(path, optimize=True)
+    buf = io.BytesIO()
+    im.convert('RGB').save(buf, 'PNG', compress_level=6)
+    assert buf.tell() < 900 * 1024, 'poster re-encodes to %d bytes: too close to the 1 MiB limit' % buf.tell()
     shutil.copyfile(path, os.path.join(ROOT, ITEMS['tram_do'][0], 'previewimage.png'))
-    print('poster   %4d KB  %s' % (os.path.getsize(path) // 1024, os.path.relpath(path, ROOT)))
+    print('poster   %4d KB  (the game re-encodes it to about %d KB)  %s'
+          % (os.path.getsize(path) // 1024, buf.tell() // 1024, os.path.relpath(path, ROOT)))
 
 
 def new_items(out):
