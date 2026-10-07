@@ -1,7 +1,12 @@
-"""The tram distribution offices' track layout: the game's own small tram depot (tram_depo_small.ini),
-whose internal tram tracks, trolley wires, parking lanes and service lane are proven in game, used
-as it is for the small office and stretched lengthwise for the large one (longer parking lanes for
-the long tram sets; straight track stays straight and joined, curves only get gentler).
+"""The tram distribution offices' track layouts, taken from the game's own tram buildings, whose
+internal tram tracks, trolley wires, parking lanes and service track are proven in game:
+
+  tramdo_small  the tram end station (tram_endstation.ini): 6 parking lanes of 38 m, in a loop
+  tramdo_large  the big tram depot (tram_depo_big.ini): 8 parking lanes, stretched 1.25x lengthwise
+                (50 m lanes for the long sets; straight track stays straight, curves only get gentler)
+
+An office holds one tram set per parking lane ($VEHICLE_PARKING): the game's road offices have
+exactly as many places as parking spots, and a full set of lanes reads "depot or workplace is full".
 
     python tools/tramdo_layout.py [out.png]      # plots both layouts (default build/tramdo/layout.png)
 
@@ -12,15 +17,19 @@ import os
 import re
 
 GAME = os.environ.get('WRSR_GAME', r'C:\Program Files (x86)\Steam\steamapps\common\SovietRepublic')
-DEPOT = os.path.join(GAME, 'media_soviet', 'buildings_types', 'tram_depo_small.ini')
+TYPES = os.path.join(GAME, 'media_soviet', 'buildings_types')
+DEPOT = os.path.join(TYPES, 'tram_depo_small.ini')
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# the two offices: object name -> (lengthwise stretch, display name, longest tram set it takes in metres)
-SIZES = {'tramdo_small': (1.0, 'Tram Distribution Office (small trams)', 30.0),
-         'tramdo_large': (1.5, 'Tram Distribution Office (large trams)', 0.0)}       # 0 = no limit
+# the two offices: object name -> source layout, lengthwise (x) stretch, display name and the longest
+# tram set it takes in metres (0 = no limit; the plugin's limit_<object> enforces it)
+SIZES = {'tramdo_small': {'src': 'tram_endstation.ini', 'scale': 1.0, 'limit': 30.0,
+                          'name': 'Tram Distribution Office (small trams)'},
+         'tramdo_large': {'src': 'tram_depo_big.ini', 'scale': 1.25, 'limit': 0.0,
+                          'name': 'Tram Distribution Office (large trams)'}}
 
 # lines that carry the depot's own identity or logic, not geometry: the office writes its own
-SKIP = ('$NAME', '$TYPE_', '$SUBTYPE_', '$MENU_SFX', '$COST_', 'end')
+SKIP = ('$NAME', '$TYPE_', '$SUBTYPE_', '$MENU_SFX', '$COST_', '$ROADVEHICLE_', 'end')
 # keyword lines whose numbers are coordinates: which number positions are x
 INLINE_X = {'$VEHICLE_PARKING': (0, 3), '$VEHICLE_STATION': (0, 3)}
 PID_LINES = ('_POINT_PID',)                  # "<pid> x y z": x is the second number
@@ -82,6 +91,24 @@ def geometry(scale=1.0, src=DEPOT):
     return lines, parsed
 
 
+def layout(key):
+    """geometry() of an office's source layout, stretched."""
+    size = SIZES[key]
+    return geometry(size['scale'], os.path.join(TYPES, size['src']))
+
+
+def cost_stops(key):
+    """The source building's construction stops ($COST_WORK_VEHICLE_STATION x y z x y z), stretched."""
+    size = SIZES[key]
+    stops = []
+    for raw in open(os.path.join(TYPES, size['src']), encoding='utf-8', errors='replace'):
+        t = raw.split()
+        if len(t) == 7 and t[0] == '$COST_WORK_VEHICLE_STATION':
+            v = [float(n) for n in t[1:]]
+            stops.append((v[0] * size['scale'], v[2], v[3] * size['scale'], v[5]))
+    return stops
+
+
 def bounds(parsed):
     """The footprint from the dead square: (x0, z0, x1, z1)."""
     sq = parsed['$CONNECTIONS_ROAD_DEAD_SQUARE'][0]
@@ -95,8 +122,9 @@ def plot(out):
                '$VEHICLE_PARKING': (30, 150, 60), '$VEHICLE_STATION': (230, 150, 0), '$CONNECTION_ROAD': (90, 90, 90),
                '$CONNECTION_ROAD_DEAD': (150, 150, 150)}
     panels = []
-    for key, (scale, name, _lim) in SIZES.items():
-        _lines, parsed = geometry(scale)
+    for key, size in SIZES.items():
+        scale = size['scale']
+        _lines, parsed = layout(key)
         x0, z0, x1, z1 = bounds(parsed)
         k = 8
         W, H = int((x1 - x0 + 20) * k), int((z1 - z0 + 20) * k)

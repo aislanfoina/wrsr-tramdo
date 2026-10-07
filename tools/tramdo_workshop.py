@@ -54,8 +54,8 @@ Your cargo trams have stood in the depot long enough, waiting for someone to tel
 
 [h2]TWO YARDS[/h2]
 [list]
-[*][b]Tram Distribution Office (small trams)[/b]: the game's small tram depot layout, four parking lanes, room for %(small)d vehicles. Takes cargo tram sets up to [b]30 m[/b] (the small and medium sets).
-[*][b]Tram Distribution Office (large trams)[/b]: the same yard with lanes half as long again for the long sets, room for %(large)d vehicles. Takes every cargo tram.
+[*][b]Tram Distribution Office (small trams)[/b]: the game's tram end station layout, [b]6 parking lanes[/b] of 38 m under a shed: up to 6 tram sets of up to [b]30 m[/b] (the small and medium sets).
+[*][b]Tram Distribution Office (large trams)[/b]: the game's big tram depot layout with longer lanes, [b]8 parking lanes[/b] of 50 m: up to 8 tram sets of any length.
 [/list]
 Both unlock with the [b]Railway distribution office[/b] research. They have a brick tram shed, the ТРАМГРУЗ dispatch wing, a traction substation and a sand tower. The game lays the yard's track and trolley wire itself, as with its own depots.
 
@@ -70,7 +70,7 @@ Requires Workers & Resources: Soviet Republic [b]1.1.1.9[/b]: the plugin patches
 [h2]GOOD TO KNOW[/h2]
 [list]
 [*]Cargo trams only: passenger trams stay with the tram depot.
-[*]Every wagon of a tram set takes one place in the office.
+[*]Each parking lane holds one tram set: when every lane is taken the office is full.
 [*]Gravel, fluids and other bulk goods leave an unloading tram station by conveyor or pipe. Run the conveyor [b]straight into the storage[/b]: with a conveyor transfer building in between, the office sees the transfer as full and keeps the trams at home. The yellow 'unsupported with unloading' note on such stations can be ignored.
 [*]Station thresholds work as with trucks: a station set to dispatch only at 20%% gets no tram before that.
 [*]The plugin runs the office's planning with fuel off (trams are electric, the game's office would wait forever to refuel them) and lets only cargo trams in. Without the plugin the offices take no trams at all.
@@ -83,7 +83,7 @@ Tested with open, covered, aggregate and waste trams. Fluid trams should work th
 
 
 def descriptions():
-    return {'tram_do': PAGE % {'img': IMAGES, 'rml': RML, 'trams': CARGO_TRAMS, 'small': 24, 'large': 40} + FOOTER}
+    return {'tram_do': PAGE % {'img': IMAGES, 'rml': RML, 'trams': CARGO_TRAMS, } + FOOTER}
 
 
 def workshop_items():
