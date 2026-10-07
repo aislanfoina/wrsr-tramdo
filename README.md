@@ -26,19 +26,23 @@ tasks, and sends a tram whenever a station has goods to move. No fixed routes, n
 ## WHAT THE MINISTRY PROVIDES
 
 - **Two tram yards.**
-  - *Tram Distribution Office (small trams)*: the game's small tram depot layout, four parking
-    lanes, room for 24 vehicles. Takes cargo tram sets up to **30 m** (the small and medium sets).
-  - *Tram Distribution Office (large trams)*: the same yard with lanes half as long again, room
-    for 40 vehicles. Takes every cargo tram, including the long ones (35-41 m).
+  - *Tram Distribution Office (small trams)*: the game's tram end station layout, **6 parking
+    lanes** of 38 m under a shed: up to 6 tram sets of up to **30 m** (the small and medium sets).
+  - *Tram Distribution Office (large trams)*: the game's big tram depot layout with lanes
+    stretched to 50 m, **8 parking lanes**: up to 8 tram sets of any length, including the long
+    ones (35-41 m).
+
+  Both unlock with the **Railway distribution office** research.
 
   Both have a brick tram shed with open portals, the two-storey ТРАМГРУЗ (*tram freight*)
   dispatch wing, a traction substation and a sand tower. Like the game's own depots, the yard's
   track and trolley wire are laid by the game itself along the layout, with proper curves.
 
-  ![Plan of the small yard: parking lanes, the west ladder, the exit curve and the station loop](docs/images/yard_plan.jpg)
+  ![Plan of the small yard: six lanes under the shed, the loop round them, the station track beside the dispatch wing](docs/images/yard_plan.jpg)
 - **The `tramdo` plugin**, which makes the office accept trams at all and keeps them moving:
   - only **cargo** trams may be bought or assigned (passenger trams stay with the tram depot),
     and the small yard turns away sets longer than its limit;
+  - the offices unlock with the railway distribution office research, like the train office;
   - the office's own planning runs with fuel switched off, because trams are electric and the
     office would otherwise wait for ever to refuel them.
 
@@ -55,8 +59,8 @@ tasks, and sends a tram whenever a station has goods to move. No fixed routes, n
 
 ### Good to know
 
-- **Every wagon of a tram set takes one place in the office**, and the office lists the wagons
-  beside their tram.
+- **Each parking lane holds one tram set**; when every lane is taken the office is full
+  ("This depot or workplace is full!").
 - Bulk goods (gravel, fluids) leave an unloading tram station by conveyor or pipe. **Run the
   conveyor straight into the storage**: with a conveyor *transfer* building in between, the office
   judges the transfer (always full) and keeps the trams at home. The yellow *unsupported with
@@ -80,7 +84,7 @@ tasks, and sends a tram whenever a station has goods to move. No fixed routes, n
 
 Close the game and the loader first. Needs the MSVC x64 toolset (Visual Studio Build Tools,
 *Desktop development with C++*) and a Windows 10/11 SDK; `build.ps1` finds them itself. The item
-lands in `workshop_wip\9000310` with the plugin in its `plugins\` folder; enable both in Republic
+lands in `workshop_wip\3814373926` with the plugin in its `plugins\` folder; enable both in Republic
 Mod Loader's Development tab.
 
 ## REBUILDING THE CONTENT
@@ -90,9 +94,10 @@ python tools/build_tramdo.py              # textures, both yards, the item and p
 python tools/build_tramdo.py yards item   # only some stages
 ```
 
-- `tools/tramdo_layout.py` takes the yard layout from the game's own small tram depot
-  (`tram_depo_small.ini`): tracks, trolley wires, parking lanes and station, stretched 1.5x
-  lengthwise for the large yard.
+- `tools/tramdo_layout.py` takes the yard layouts from the game's own tram buildings: tracks,
+  trolley wires, parking lanes and station of the tram end station (`tram_endstation.ini`) for
+  the small yard and of the big tram depot (`tram_depo_big.ini`, stretched 1.25x lengthwise) for
+  the large one.
 - `tools/tramdo_scene.py` (Blender 5.x) models the buildings around that layout and writes the
   models, `building.ini` and previews.
 - `tools/tramdo_workshop.py` writes `workshopconfig.ini`, the store page and the poster.
@@ -128,8 +133,8 @@ station setup (thresholds, what the conveyor connects to) and the `tramdo` lines
 ## LICENCE AND CREDITS
 
 GPL-3.0 (see `LICENSE`). The plugin builds against TesmioLoader by MaxLegend (GPL-3.0, headers in
-`vendor/`) and runs on Republic Mod Loader by UltimateUniverse. The yard layout is the game's own
-small tram depot's. The cargo trams come from other authors' mods; this office only runs them.
+`vendor/`) and runs on Republic Mod Loader by UltimateUniverse. The yard layouts are the game's own
+tram end station's and big tram depot's. The cargo trams come from other authors' mods; this office only runs them.
 
 Workers & Resources: Soviet Republic is (c) 3Division. This is an independent fan-made mod, not
 affiliated with or endorsed by 3Division or Hooded Horse.

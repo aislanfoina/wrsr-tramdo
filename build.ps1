@@ -153,5 +153,5 @@ if ($Install) {
             Write-Host "[build] $kind $($b.Name) -> workshop_wip\$id" -ForegroundColor Green
         }
     }
-    Write-Host '[build] open Republic Mod Loader, enable the development item 9000310 and its tramdo plugin, then launch.'
+    Write-Host '[build] open Republic Mod Loader, enable the development item 3814373926 and its tramdo plugin, then launch.'
 }

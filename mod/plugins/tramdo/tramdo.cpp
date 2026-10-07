@@ -18,6 +18,13 @@
 // train office checks against its max train length). Every other building gets the game's (and
 // other plugins') answer.
 //
+// Research. A road distribution office unlocks with the "distribution_office" research (it unlocks
+// building type 0x2B). For our offices the plugin adds the research named by `research` (default
+// railway_distribution_office, which itself needs distribution_office): 0x2F76C0(game, building
+// descriptor) fills game +0x11790 (std::vector of research records) with the researches still
+// blocking a building - the build menu treats a non-empty list as locked and names them. After the
+// game's own pass the plugin appends that research's record while it is unfinished.
+//
 // Fuel. The road office's update (0x1C6050, building type 0x2B) walks its parked vehicles and, when
 // the game runs with fuel (game +0x5B0 == 2), treats a vehicle whose fuel (vehicle +0x5F0) is <= 0 as
 // empty: it tries to refuel it from the office's own fuel storage and skips it. Electric vehicles
@@ -65,6 +72,22 @@ static GroupIdFn g_groupId;
 static SetLengthFn g_setLength;         // NULL when the bytes there are not the 1.1.1.9 function: no limits
 static const unsigned char kSetLengthPro[16] = { 0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x83, 0xB9, 0xA0, 0x02, 0x00, 0x00,
                                                  0x00, 0x4C, 0x8B, 0xD1 };
+
+#define RVA_MISSING_RESEARCH 0x2F76C0   // (game, building descriptor): researches blocking it -> game +0x11790
+#define RVA_VEC_GROW    0x41A0          // the game's grow-by-one for that std::vector<void*> (as 0x2F76C0 calls it)
+#define CTX_RESEARCH    0x11778         // std::vector of research records (0xE8 bytes: name +0, progress +0xD0)
+#define CTX_BLOCKING    0x11790         // begin, end, capacity
+#define CTX_NO_RESEARCH 0x1090          // set: research is off, everything is unlocked
+#define RES_SIZE        0xE8
+#define RES_PROGRESS    0xD0
+static const unsigned char kMissingPro[18] = { 0x4C, 0x8B, 0xDC, 0x53, 0x55, 0x41, 0x57, 0x48, 0x83, 0xEC, 0x50, 0x48,
+                                               0x8D, 0x99, 0x90, 0x17, 0x01, 0x00 };
+typedef void (*MissingFn)(unsigned char* game, unsigned char* td);
+typedef void (*VecGrowFn)(void* vec);
+static MissingFn g_origMissing;
+static VecGrowFn g_vecGrow;
+static char g_research[64] = "railway_distribution_office";   // empty = no extra research
+static int  g_researchWarned, g_gateLogged;
 
 // limit_<object> = metres: the longest tram set that office takes
 #define MAX_LIMITS 8
@@ -114,6 +137,7 @@ static void LoadConfig(void)
         if (!_stricmp(key, "enabled")) g_enabled = atoi(val);
         else if (!_stricmp(key, "object_prefix") && *val) strncpy(g_prefix, val, sizeof g_prefix - 1);
         else if (!_stricmp(key, "log_decisions")) g_logMax = atoi(val);
+        else if (!_stricmp(key, "research")) { strncpy(g_research, val, sizeof g_research - 1); g_research[sizeof g_research - 1] = 0; }
         else if (!_strnicmp(key, "limit_", 6) && key[6] && g_nLimits < MAX_LIMITS && atof(val) > 0)
         {
             strncpy(g_limits[g_nLimits].object, key + 6, sizeof g_limits[0].object - 1);
@@ -134,11 +158,10 @@ static int LooksLikePointer(const void* p)
     return H->readablePtr(p, 16);
 }
 
-// the object part of a building's type ident ("9000300/tramdo_a" -> "tramdo_a") and its building type
-static const char* ObjectOf(unsigned char* b, int* type)
+// the object part of a building descriptor's ident ("3814373926/tramdo_small" -> "tramdo_small") and
+// its building type
+static const char* DescObject(unsigned char* td, int* type)
 {
-    if (!LooksLikePointer(b) || !Readable(b + BLD_TYPEDESC, 8)) return NULL;
-    unsigned char* td = *(unsigned char**)(b + BLD_TYPEDESC);
     if (!LooksLikePointer(td) || !Readable(td, 0x40) || !Readable(td + TD_TYPE, 4)) return NULL;
     const char* s = (const char*)td;
     int i = 0;
@@ -148,6 +171,13 @@ static const char* ObjectOf(unsigned char* b, int* type)
     *type = *(int*)(td + TD_TYPE);
     const char* slash = strrchr(s, '/');
     return slash ? slash + 1 : s;
+}
+
+// the same for a placed building
+static const char* ObjectOf(unsigned char* b, int* type)
+{
+    if (!LooksLikePointer(b) || !Readable(b + BLD_TYPEDESC, 8)) return NULL;
+    return DescObject(*(unsigned char**)(b + BLD_TYPEDESC), type);
 }
 
 static int TramGroup(void)
@@ -239,6 +269,41 @@ static int IsOffice(unsigned char* bld)
     return obj && _strnicmp(obj, g_prefix, strlen(g_prefix)) == 0;
 }
 
+// after the game listed what blocks a building: our offices also wait for g_research
+static void AddResearchGate(unsigned char* game, unsigned char* td)
+{
+    if (!g_research[0] || *(unsigned char*)(game + CTX_NO_RESEARCH)) return;
+    int type = -1;
+    const char* obj = DescObject(td, &type);
+    if (!obj || _strnicmp(obj, g_prefix, strlen(g_prefix)) != 0) return;
+    unsigned char* r = *(unsigned char**)(game + CTX_RESEARCH);
+    unsigned char* e = *(unsigned char**)(game + CTX_RESEARCH + 8);
+    if (!r || e <= r || (e - r) % RES_SIZE || !Readable(r, e - r)) return;
+    for (; r < e; r += RES_SIZE)
+        if (!_stricmp((const char*)r, g_research)) break;
+    if (r >= e)
+    {
+        if (!g_researchWarned++) LogLine("tramdo  research \"%s\" not found - offices unlock with distribution_office alone", g_research);
+        return;
+    }
+    if (*(float*)(r + RES_PROGRESS) >= 1.0f) return;
+    void*** vec = (void***)(game + CTX_BLOCKING);
+    for (void** p = vec[0]; p && p < vec[1]; ++p)
+        if (*p == r) return;
+    if (vec[1] == vec[2]) g_vecGrow(vec);
+    if (!vec[1]) return;
+    *vec[1] = r;
+    vec[1] += 1;
+    if (!g_gateLogged++) LogLine("tramdo  %s waits for research %s", obj, g_research);
+}
+
+static void DetourMissing(unsigned char* game, unsigned char* td)
+{
+    g_origMissing(game, td);
+    __try { AddResearchGate(game, td); }
+    __except (H->faultFilter("tramdo", GetExceptionInformation())) {}
+}
+
 static void DetourDoTick(void* game, unsigned char* bld)
 {
     int ours = 0;
@@ -289,7 +354,7 @@ extern "C" __declspec(dllexport) int TsmPluginInit(const TsmHost* host, TsmPlugi
 {
     H = host;
     info->name    = "tramdo";
-    info->version = "0.2";
+    info->version = "0.3";
     return 0;
 }
 
@@ -313,6 +378,14 @@ extern "C" __declspec(dllexport) int TsmPluginStart(void)
     int fuel = Hook(RVA_DO_TICK, kDoTickPro, sizeof kDoTickPro, (void*)&DetourDoTick, (void**)&g_origDoTick, "tramdo OfficeUpdate");
     if (!fuel)
         LogLine("tramdo  office update 0x%X not hooked - with fuel on, electric trams will never be dispatched", RVA_DO_TICK);
+    if (g_research[0])
+    {
+        g_vecGrow = (VecGrowFn)(H->exeBase + RVA_VEC_GROW);
+        if (Hook(RVA_MISSING_RESEARCH, kMissingPro, sizeof kMissingPro, (void*)&DetourMissing, (void**)&g_origMissing, "tramdo MissingResearch"))
+            LogLine("tramdo  offices also need research %s", g_research);
+        else
+            LogLine("tramdo  research check 0x%X not hooked - offices unlock with distribution_office alone", RVA_MISSING_RESEARCH);
+    }
     LogLine("tramdo  active: buildings named %s* take cargo trams (tram train group, not passenger), and only those; fuel bypass %s",
             g_prefix, fuel ? "on" : "OFF");
     return 0;
