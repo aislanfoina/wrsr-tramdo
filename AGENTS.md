@@ -8,12 +8,14 @@ traps that already cost time. `README.md` is the player-facing page.
 
 ## 1. What this is
 
-A mod for **Workers & Resources: Soviet Republic 1.1.1.9** (`SOVIET64.exe`, image base
-0x140000000; every address below is an RVA valid for this build only): a distribution office for
+A mod for **Workers & Resources: Soviet Republic 1.1.1.13** (`SOVIET64.exe`, image base
+0x140000000; every address the plugin uses is an RVA valid for this build only - ported from
+1.1.1.9 on 2026-11-24, see section 6): a distribution office for
 **cargo trams**. The game's road distribution office plans and dispatches the trams natively; the
 `tramdo` plugin (C++, MSVC x64, /MT) only lets trams in and removes one fuel check. Two buildings,
 `tramdo_small` (the tram end station's layout, 6 lanes, tram sets up to 30 m) and `tramdo_large`
-(the big tram depot's, 8 lanes stretched to 50 m, all sets). One tram set per parking lane. Runs on **Republic Mod Loader (RML)**, Workshop item 3787969749 (TesmioLoader API 3/4).
+(the big tram depot's, 8 lanes stretched to 50 m, all sets). One tram set per parking lane. Runs on **Republic Mod Loader (RML)** (TesmioLoader API 3/4); for 1.1.1.13 RML ships in the **WRSR
+Ultimate Pack** (Workshop 3838038411, another modder's item); the original RML item 3787969749 is gone.
 
 Cargo trams come from other authors' mods (e.g. collection 3586298879: tram packs 3563301077,
 3586205860, tram cargo stations 3563264112, 3586206025). Stay compatible; never bundle them.
@@ -67,18 +69,18 @@ building type 0x2B) **with `$SUBTYPE_TRAM`** on a tram-depot layout. The train o
 railway sidings ("Building needs rail connection"); a road office without the subtype finds no
 route for its trams.
 
-**Plugin, hook 1 - CanUseBuilding 0x3E2900**(game, building, vehicle type, flag, x): asked by the
+**Plugin, hook 1 - CanUseBuilding 0x3E2840**(game, building, vehicle type, flag, x): asked by the
 purchase list, vehicle assignment and production-line delivery. For buildings whose object name
 starts with `object_prefix` (`tramdo`) the plugin answers: cargo vehicles of the "tram" train group
 yes (cargo class at vt+0x8600 != PASSANGER 7), all else no; plus `limit_<object> = metres` (set
-length via the game's 0x25C270). Everything else chains to the original.
+length via the game's 0x25C1F0). Everything else chains to the original.
 
-**Plugin, hook 2 - road office update 0x1C6050**(game, building): with fuel on (game+0x5B0 == 2) it
+**Plugin, hook 2 - road office update 0x1C5FD0**(game, building): with fuel on (game+0x5B0 == 2) it
 skips vehicles whose fuel (vehicle+0x5F0) is <= 0 and tries to refuel them; electric vehicles keep
 +0x5F0 = 0, so trams never left. For our offices only, the plugin sets game+0x5B0 = 0 around the
 original call. Assumes building updates do not run in parallel threads.
 
-**Plugin, hook 3 - missing research 0x2F76C0**(game, building descriptor): fills game +0x11790
+**Plugin, hook 3 - missing research 0x2F7640**(game, building descriptor): fills game +0x11790
 (std::vector of research records) with the researches still blocking a building; the build menu
 treats a non-empty list as locked. A road office unlocks with `distribution_office` (it unlocks
 building type 0x2B); for our offices the plugin appends the `research` setting's record
@@ -101,7 +103,12 @@ across; lanes run along x in the depot, along z in the end station): the shed co
 shed and station track facing it, and the substation, sand tower and lamps go where a clearance
 search (`find_spot`, `obstacles`) finds room clear of every path, track, wire and road piece.
 
-## 6. Engine facts used (1.1.1.9)
+## 6. Engine facts used
+
+Offsets and the addresses the plugin uses are 1.1.1.13 (checked by `tools/port_scan.py --verify`;
+structure offsets and `.data` did not move in that update). The research-trail addresses marked
+*(1.1.1.9)* were not re-derived: that region of the game moved mostly -0x80 (0x1C6050 -> 0x1C5FD0,
+0x1C6DD0 -> 0x1C6D50, 0x1F0BE0 -> 0x1F0B60), so they are a starting point, not an address.
 
 - Trams are rail vehicles: `$TYPE VEHICLETYPE_RAIL_LOCOMOTIVE` + `$TRAINGROUP_TRAM`, wagons via
   `$TRAINSET`; they use road infrastructure (tram depot = `$TYPE_ROADDEPO` + `$SUBTYPE_TRAM`; tram
@@ -113,26 +120,26 @@ search (`find_spot`, `obstacles`) finds room clear of every path, track, wire an
   10 HELI); +0x7A78 length (float, m); +0x7C08/+0x7C10 `$TRAINSET` vector, 0x110-byte entries (name;
   resolved wagon type at +0x100); +0x8600 cargo class (COVERED 0 .. PASSANGER 7 .. WASTE 17, 18 none),
   +0x8604 capacity; +0x8680 byte0 electric; +0x96B8 std::vector<int> train groups.
-- 0x25C7B0(game = exe+0x9D4F10, "tram") = the tram group id (11 in a modded game, looked up live).
-- 0x25C270(vt) = set length: vt+0x7A78 (coupler adjustments when vt+0x2A0 is set) plus each
+- 0x25C730(game = exe+0x9D4F10, "tram") = the tram group id (11 in a modded game, looked up live).
+- 0x25C1F0(vt) = set length: vt+0x7A78 (coupler adjustments when vt+0x2A0 is set) plus each
   `$TRAINSET` wagon's +0x7A78. The train office compares the same sum with its max train length
-  (office +0xD70; +0xD74 min wagons) in the matcher 0x1DE2B0.
-- Office planning: 0x1C6050 -> 0x1E2380 (transfers into office +0xD58, 128-byte records) ->
+  (office +0xD70; +0xD74 min wagons) in the matcher 0x1DE2B0 *(1.1.1.9)*.
+- Office planning *(1.1.1.9)*: 0x1C6050 -> 0x1E2380 (transfers into office +0xD58, 128-byte records) ->
   0x1E3BD0 per record (source half +0x10 building, +0x18 kind, +0x28 free fraction, +0x30 stock,
   +0x38 capacity; destination half from +0x48) -> 0x1E4BC0. Kinds 0/1 direct, 2/3 via conveyor,
   4/5 waste. The pass already looks *through* a conveyor engine to the storage, but not through a
   conveyor transfer building.
-- Dispatch: 0x1E5350(game, vehicle, office) -> 0x1E5480 / 0x1E5BA0 (route) -> 0x6B8EB0 (start).
-- Matcher 0x1DE2B0 gives waste transfers only to cargo class 0x11 vehicles.
+- Dispatch *(1.1.1.9)*: 0x1E5350(game, vehicle, office) -> 0x1E5480 / 0x1E5BA0 (route) -> 0x6B8EB0 (start).
+- Matcher 0x1DE2B0 *(1.1.1.9)* gives waste transfers only to cargo class 0x11 vehicles.
 - Research: records in game +0x11778/+0x11780 (= exe+0x9E6688), 0xE8 bytes: name +0 (inline),
   +0x60/+0x68 buildings it unlocks (all must be done), +0x78/+0x80 one-is-enough unlocks,
-  +0xA8/+0xB0 used by 0x2F7960, progress +0xD0 (>= 1.0 done). The parser 0x2F3C60 resolves
+  +0xA8/+0xB0 used by 0x2F7960 *(1.1.1.9)*, progress +0xD0 (>= 1.0 done). The parser 0x2F3C60 *(1.1.1.9)* resolves
   `$UNLOCK_BUILDING_TYPE` / `_STYLE_FLAG` (descriptor +0x20D) to descriptor pointers at load.
   Building descriptors: exe+0x9E6A30 vector, 0xBE8 bytes, ident +0, type +0x360. game +0x1090 set
   = research off. Unlocks: distribution_office -> type 43 (0x2B), railway_distribution_office -> 52.
 - "Some buildings have unsupported settings" / "unsupported with unloading" = status text from
-  0x741170 (road office): UI only, dispatch still works.
-- Fleet tally 0x1E1740 counts vehicle kinds 1/6/8/10 only: kind 4 (trams) is not tallied, so the
+  0x741170 *(1.1.1.9)* (road office): UI only, dispatch still works.
+- Fleet tally 0x1E1740 *(1.1.1.9)* counts vehicle kinds 1/6/8/10 only: kind 4 (trams) is not tallied, so the
   office may send more trams than a task needs. Not observed as a problem yet.
 
 ## 7. Settings (`mod/plugins/tramdo/tramdo.ini`)
@@ -201,7 +208,7 @@ limit (the H51 large set refused by the small yard, medium sets admitted).
 ## 12. Links
 
 - Repo: https://github.com/aislanfoina/wrsr-tramdo
-- Republic Mod Loader: https://steamcommunity.com/sharedfiles/filedetails/?id=3787969749
+- Republic Mod Loader for 1.1.1.13 (WRSR Ultimate Pack): https://steamcommunity.com/sharedfiles/filedetails/?id=3838038411
 - RML source: https://github.com/Ultimate-Universe/WRSR-RepublicModLoader
 - TesmioLoader: https://github.com/MaxLegend/TesmioLoader (branch master)
 - Cargo tram collection used for testing: https://steamcommunity.com/workshop/filedetails/?id=3586298879
