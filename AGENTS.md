@@ -202,8 +202,12 @@ offices tramdo_a..d; retired 2026-10-07):
    7 cargo sets of 21-26 m admitted, the long 37-41 m sets over the 30 m limit, 35 passenger trams
    refused. The **₽** purchase list (the $ one is empty by design, section 6) showed exactly those
    7 sets with their rouble prices, and buying the H51 medium open tram took 83,889 ₽ and created
-   the tram and its wagon. Not tested: assigning a tram, the yards, a full delivery cycle watched
-   end to end. `tools/dev/tramprobe.py` lists the offices and trams with positions.
+   the tram and its wagon. The game then routes a bought vehicle through a customs house: the new
+   tram's home (vehicle +0x4F0/+0x4F8; an office's trams hold the office there) was the road
+   customs house `DLC3_customs_medium`, 1.7 km away, and after 44 game days it was still waiting
+   there, unplaced - **delivery not confirmed** (game logistics, not the plugin's hooks; whether a
+   tram can be delivered through a road customs house is the open question). Not tested:
+   assigning a tram, the yards, a full delivery cycle watched end to end. `tools/dev/tramprobe.py` lists the offices and trams with positions.
 
 Still to test in game: the two yard buildings (placement, the game's track through the shed and
 the yard, buildings clear of it) and assigning trams on 1.2.0.9.
@@ -226,7 +230,7 @@ the yard, buildings clear of it) and assigning trams on 1.2.0.9.
 
 - Core office: done on 1.1.1.9 (purchase, assignment, parking, dispatch, full cycles). On 1.2.0.9
   (section 9, test 7): existing trams keep working, the ₽ purchase list offers the admitted sets
-  and buying works.
+  and buying works; the bought tram's delivery (via a customs house) was not seen to finish.
 - Size limit and cargo-only filter: verified on 1.2.0.9 (the ₽ list shows only the 7 cargo sets
   within 30 m); yards still to be tested in game.
 - Workshop: item 3814373926 created and uploaded (content, both yards + plugin) 2026-10-05,
