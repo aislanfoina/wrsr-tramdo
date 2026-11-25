@@ -48,13 +48,15 @@ tasks, and sends a tram whenever a station has goods to move. No fixed routes, n
 
 ## HOW TO RUN IT
 
-1. Install [Republic Mod Loader](https://steamcommunity.com/sharedfiles/filedetails/?id=3787969749)
-   and some cargo trams, for example the
+1. Subscribe to the [WRSR Ultimate Pack](https://steamcommunity.com/sharedfiles/filedetails/?id=3838038411), which carries Republic Mod Loader
+   (another modder's item; its own plugins can be switched off - check it supports your game version), and to some cargo trams, for example the
    [cargo tram collection](https://steamcommunity.com/workshop/filedetails/?id=3586298879) this
    office was built and tested with.
-2. Install this mod (not on the Workshop yet: see *Build and install* below), enable it and its
-   **tramdo** plugin in Republic Mod Loader, and launch.
-3. Build an office on your tram network, buy cargo trams in its window (or move trams in), and give
+2. Subscribe to [Tram Distribution Office](https://steamcommunity.com/sharedfiles/filedetails/?id=3814373926)
+   (or build it yourself: see *Build and install* below), enable it and its **tramdo** plugin in
+   Republic Mod Loader, and launch.
+3. Build an office on your tram network, buy cargo trams in its window with the rouble (₽) purchase
+   button (the tram packs have no dollar price, so the $ list stays empty) or move trams in, and give
    it tasks like any distribution office: the tram cargo stations to load at and to unload at.
 
 ### Good to know
@@ -70,9 +72,9 @@ tasks, and sends a tram whenever a station has goods to move. No fixed routes, n
 
 ## REQUIREMENTS
 
-- Workers & Resources: Soviet Republic **1.1.1.9** (`SOVIET64.exe`). The plugin patches this exact
+- Workers & Resources: Soviet Republic **1.2.0.9** (`SOVIET64.exe`). The plugin patches this exact
   build and refuses to hook anything it does not recognise.
-- [Republic Mod Loader](https://steamcommunity.com/sharedfiles/filedetails/?id=3787969749).
+- Republic Mod Loader for that build (it ships in the [WRSR Ultimate Pack](https://steamcommunity.com/sharedfiles/filedetails/?id=3838038411).
 - Cargo trams from a tram mod (the base game has passenger trams only).
 
 ## BUILD AND INSTALL

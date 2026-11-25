@@ -1,4 +1,5 @@
 // tramdo - a tram distribution office: the game's road distribution office, for cargo trams.
+// Game build: 1.2.0.9 (ported 2026-11-25 from 1.2.0.8, which came via 1.1.1.13; tools/port_scan.py --verify checks the hooks).
 //
 // Trams are rail vehicles to the engine (VEHICLETYPE_RAIL_LOCOMOTIVE / _RAIL_VAGON in the "tram"
 // train group) but use road infrastructure: the tram depot is a road depot with $SUBTYPE_TRAM, tram
@@ -6,27 +7,27 @@
 // ($TYPE_DISTRIBUTION_OFFICE, building type 0x2B) with $SUBTYPE_TRAM on a tram-depot layout, which
 // plans and dispatches trams natively once two things are fixed.
 //
-// Which vehicles. SOVIET64 0x3E2900(game, building, vehicle type, flag, x) - "may this vehicle type
+// Which vehicles. RVA_CAN_USE(game, building, vehicle type, flag, x) - "may this vehicle type
 // use this building" - is asked by the purchase list, vehicle assignment and production-line
 // delivery, and a road office never takes a rail vehicle. The tram depot instead admits vehicles
 // whose train-group list (vehicle +0x96B8, std::vector<int>) holds the "tram" group (id from
-// 0x25C7B0(game, "tram")). This plugin answers that question for our offices only - buildings whose
+// RVA_GROUP_ID(game, "tram")). This plugin answers that question for our offices only - buildings whose
 // object name starts with object_prefix (tramdo.ini): any cargo vehicle of the tram group may
 // (passenger trams - cargo class PASSANGER, which every base-game tram is - may not), nothing else
 // may; an office with a limit_<object> line takes only tram sets up to that length, measured by the
-// game's own 0x25C270(vehicle type) (the vehicle's +0x7A78 plus each $TRAINSET wagon's, the sum the
+// game's own RVA_SET_LENGTH(vehicle type) (the vehicle type's length field plus each $TRAINSET wagon's, the sum the
 // train office checks against its max train length). Every other building gets the game's (and
 // other plugins') answer.
 //
 // Research. A road distribution office unlocks with the "distribution_office" research (it unlocks
 // building type 0x2B). For our offices the plugin adds the research named by `research` (default
-// railway_distribution_office, which itself needs distribution_office): 0x2F76C0(game, building
-// descriptor) fills game +0x11790 (std::vector of research records) with the researches still
+// railway_distribution_office, which itself needs distribution_office): RVA_MISSING_RESEARCH(game, building
+// descriptor) fills game +CTX_BLOCKING (std::vector of research records) with the researches still
 // blocking a building - the build menu treats a non-empty list as locked and names them. After the
 // game's own pass the plugin appends that research's record while it is unfinished.
 //
-// Fuel. The road office's update (0x1C6050, building type 0x2B) walks its parked vehicles and, when
-// the game runs with fuel (game +0x5B0 == 2), treats a vehicle whose fuel (vehicle +0x5F0) is <= 0 as
+// Fuel. The road office's update (RVA_DO_TICK, building type 0x2B) walks its parked vehicles and, when
+// the game runs with fuel (game +CTX_FUEL_MODE == 2), treats a vehicle whose fuel (vehicle +0x5F0) is <= 0 as
 // empty: it tries to refuel it from the office's own fuel storage and skips it. Electric vehicles
 // (vehicle type +0x8680 byte set) have no fuel level - +0x5F0 stays 0 - and the base game never puts
 // one in an office, so a tram was "empty" forever and never dispatched. For our offices the plugin
@@ -42,19 +43,19 @@
 
 static const TsmHost* H;
 
-#define RVA_CAN_USE     0x3E2900
-#define RVA_GROUP_ID    0x25C7B0
-#define RVA_SET_LENGTH  0x25C270        // float (vehicle type): its length plus its $TRAINSET wagons'
-#define RVA_GAME        0x9D4F10
+#define RVA_CAN_USE     0x401C70 // v1.2.0.9; was 0x4019C0 in 1.2.0.8, 0x3E2840 in 1.1.1.13
+#define RVA_GROUP_ID    0x277950 // v1.2.0.9; was 0x277AA0 in 1.2.0.8, 0x25C730 in 1.1.1.13
+#define RVA_SET_LENGTH  0x2773D0        // v1.2.0.9; was 0x277520 in 1.2.0.8, 0x25C1F0 in 1.1.1.13. float (vehicle type): its length plus its $TRAINSET wagons'
+#define RVA_GAME        0xA1EF20 // v1.2.0.8; was 0x9D4F10 in 1.1.1.13
 #define BLD_TYPEDESC    0x318
-#define TD_TYPE         0x360
+#define TD_TYPE         0x368 // v1.2.0.8; was 0x360 in 1.1.1.13
 #define VT_IDENT        0x200
-#define VT_GROUPS       0x96B8          // std::vector<int> of train-group ids: begin, end
-#define VT_CARGO        0x8600          // RESOURCE_TRANSPORT_* class: COVERED 0 .. PASSANGER 7 .. WASTE 17, 18 none
+#define VT_GROUPS       0x9708          // v1.2.0.8; was 0x96B8 in 1.1.1.13. std::vector<int> of train-group ids: begin, end
+#define VT_CARGO        0x8650          // v1.2.0.8; was 0x8600 in 1.1.1.13. RESOURCE_TRANSPORT_* class: COVERED 0 .. PASSANGER 7 .. WASTE 17, 18 none
 #define CARGO_PASSENGER 7
 #define TYPE_DO_RAIL    0x34
-#define RVA_DO_TICK     0x1C6050        // road distribution office update (game, building)
-#define CTX_FUEL_MODE   0x5B0           // 2 = vehicles use fuel
+#define RVA_DO_TICK     0x1E02E0        // v1.2.0.9; was 0x1E03E0 in 1.2.0.8, 0x1C5FD0 in 1.1.1.13. road distribution office update (game, building)
+#define CTX_FUEL_MODE   0x5D8           // v1.2.0.8; was 0x5B0 in 1.1.1.13. 2 = vehicles use fuel
 
 static const unsigned char kDoTickPro[15] = { 0x48, 0x8B, 0xC4, 0x48, 0x89, 0x48, 0x08, 0x55, 0x53, 0x56, 0x57,
                                               0x41, 0x54, 0x41, 0x55 };
@@ -69,19 +70,17 @@ typedef int (*GroupIdFn)(void* game, const char* name);
 typedef float (*SetLengthFn)(unsigned char* vt);
 static CanUseFn g_origCanUse;
 static GroupIdFn g_groupId;
-static SetLengthFn g_setLength;         // NULL when the bytes there are not the 1.1.1.9 function: no limits
-static const unsigned char kSetLengthPro[16] = { 0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x83, 0xB9, 0xA0, 0x02, 0x00, 0x00,
-                                                 0x00, 0x4C, 0x8B, 0xD1 };
+static SetLengthFn g_setLength;         // NULL when the bytes there are not this build's function: no limits
+static const unsigned char kSetLengthPro[16] = { 0x48, 0x89, 0x5C, 0x24, 0x08, 0xF3, 0x0F, 0x10, 0x91, 0xB0, 0x7A, 0x00, 0x00, 0x0F, 0x57, 0xC0 };
 
-#define RVA_MISSING_RESEARCH 0x2F76C0   // (game, building descriptor): researches blocking it -> game +0x11790
-#define RVA_VEC_GROW    0x41A0          // the game's grow-by-one for that std::vector<void*> (as 0x2F76C0 calls it)
-#define CTX_RESEARCH    0x11778         // std::vector of research records (0xE8 bytes: name +0, progress +0xD0)
-#define CTX_BLOCKING    0x11790         // begin, end, capacity
-#define CTX_NO_RESEARCH 0x1090          // set: research is off, everything is unlocked
-#define RES_SIZE        0xE8
-#define RES_PROGRESS    0xD0
-static const unsigned char kMissingPro[18] = { 0x4C, 0x8B, 0xDC, 0x53, 0x55, 0x41, 0x57, 0x48, 0x83, 0xEC, 0x50, 0x48,
-                                               0x8D, 0x99, 0x90, 0x17, 0x01, 0x00 };
+#define RVA_MISSING_RESEARCH 0x315C50   // v1.2.0.9; was 0x315A10 in 1.2.0.8, 0x2F7640 in 1.1.1.13. (game, building descriptor): researches blocking it -> game +CTX_BLOCKING
+#define RVA_VEC_GROW    0x41E0          // v1.2.0.8; was 0x41A0 in 1.1.1.13. the game's grow-by-one for that std::vector<void*> (as RVA_MISSING_RESEARCH calls it);
+#define CTX_RESEARCH    0x11818         // v1.2.0.9; was 0x11810 in 1.2.0.8, 0x11778 in 1.1.1.13. std::vector of research records (0x138 bytes: name +0, progress +0x120)
+#define CTX_BLOCKING    0x11830         // v1.2.0.9; was 0x11828 in 1.2.0.8, 0x11790 in 1.1.1.13. begin, end, capacity
+#define CTX_NO_RESEARCH 0x10C0          // v1.2.0.8; was 0x1090 in 1.1.1.13. set: research is off, everything is unlocked
+#define RES_SIZE        0x138 // v1.2.0.8; was 0xE8 in 1.1.1.13
+#define RES_PROGRESS    0x120 // v1.2.0.8; was 0xD0 in 1.1.1.13
+static const unsigned char kMissingPro[18] = { 0x4C, 0x8B, 0xDC, 0x53, 0x55, 0x41, 0x57, 0x48, 0x83, 0xEC, 0x50, 0x48, 0x8D, 0x99, 0x30, 0x18, 0x01, 0x00 };
 typedef void (*MissingFn)(unsigned char* game, unsigned char* td);
 typedef void (*VecGrowFn)(void* vec);
 static MissingFn g_origMissing;
@@ -330,7 +329,7 @@ static int Hook(unsigned rva, const unsigned char* pristine, size_t len, void* d
     const unsigned char* expect = pristine;
     unsigned char* t = (unsigned char*)(H->exeBase + rva);
     static const unsigned char kAbsJmp[6] = { 0xFF, 0x25, 0x00, 0x00, 0x00, 0x00 };
-    if (!H->readablePtr(t, len)) return 0;
+    if (!H->readablePtr(t, len < 14 ? 14 : len)) return 0;
     if (memcmp(t, kAbsJmp, 6) == 0)
     {
         memcpy(live, t, 14);
@@ -339,9 +338,20 @@ static int Hook(unsigned rva, const unsigned char* pristine, size_t len, void* d
     }
     else if (memcmp(t, pristine, len) != 0)
     {
-        memcpy(live, t, len);
-        expect = live;
-        LogLine("tramdo  %s: patched by another plugin, chaining onto the live bytes", label);
+        // another plugin's relative jump or mov reg, imm64 + jmp reg: chain onto it; anything else is not
+        // the function this plugin was built for (a different game version) - refuse, never hook unknown code
+        if (t[0] == 0xE9 || (t[0] == 0x48 && t[1] == 0xB8 && t[10] == 0xFF && t[11] == 0xE0) ||
+            (t[0] == 0x49 && t[1] == 0xBB && t[10] == 0x41 && t[11] == 0xFF && t[12] == 0xE3))
+        {
+            memcpy(live, t, len);
+            expect = live;
+            LogLine("tramdo  %s: another plugin's hook is there, chaining onto it", label);
+        }
+        else
+        {
+            LogLine("tramdo  %s: the bytes there are not the function this plugin was built for (another game version?) - not hooked", label);
+            return 0;
+        }
     }
     return H->installInlineHook(t, detour, orig, expect, len, label);
 }

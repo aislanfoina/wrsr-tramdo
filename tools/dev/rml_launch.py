@@ -17,7 +17,8 @@ except Exception:  # noqa: BLE001
     pass
 u = ctypes.windll.user32
 g = ctypes.windll.gdi32
-RML_DIR = r'C:\Program Files (x86)\Steam\steamapps\workshop\content\784150\3787969749'
+# Republic Mod Loader for game 1.1.1.13 ships in the WRSR Ultimate Pack; the original item 3787969749 is gone
+RML_DIR = r'C:\Program Files (x86)\Steam\steamapps\workshop\content\784150\3838038411'
 
 
 class BMI(ctypes.Structure):

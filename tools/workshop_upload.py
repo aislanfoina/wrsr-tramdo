@@ -19,11 +19,11 @@ Fields (several at once, or all):
   content      that installed folder itself - run build.ps1 -Install first, with the game and RML closed
   visibility   the packer's $VISIBILITY, in the game's numbering (0 unpublished, 1 friends, 2 public)
 Actions:
-  required     add the packer's Required Items (existing ones stay)
+  required     add the packer's Required Items (existing ones stay) and remove its retired ones
   create       create the items that still have local ids (9000xxx) with the game's type tag,
                private; put the printed ids in the packer, rebuild, install, then upload content
   collection   the packer's workshop_collection(): created on first use (put the printed id in the
-               packer), then its page is set and its items added - "Subscribe to all" for players
+               packer), then its page is set, its items added and retired ones removed - "Subscribe to all"
   --check      sign-in, ids and what differs from the live store pages; touches nothing on Steam
 
 It loads the game's own steam_api64.dll (Steamworks flat API, ISteamUGC v012) as app 784150, so
@@ -65,7 +65,7 @@ ERESULT = {1: 'OK', 2: 'Fail', 8: 'InvalidParam', 9: 'FileNotFound', 15: 'Access
            25: 'LimitExceeded', 29: 'DuplicateRequest', 33: 'Busy'}
 UPDATE_STATUS = {1: 'preparing config', 2: 'preparing content', 3: 'uploading content', 4: 'uploading preview',
                  5: 'committing changes'}
-CB_CREATE, CB_SUBMIT, CB_DEPENDENCY = 3403, 3404, 3412          # k_iClientUGCCallbacks + 3 / 4 / 12
+CB_CREATE, CB_SUBMIT, CB_DEPENDENCY, CB_UNDEPENDENCY = 3403, 3404, 3412, 3413   # k_iClientUGCCallbacks + 3 / 4 / 12 / 13
 
 
 # ------------------------------------------------------------- the items --
@@ -181,6 +181,7 @@ SIGNATURES = {
     'SteamAPI_ISteamUGC_SubmitItemUpdate': (c_uint64, [c_void_p, c_uint64, c_char_p]),
     'SteamAPI_ISteamUGC_GetItemUpdateProgress': (c_int, [c_void_p, c_uint64, POINTER(c_uint64), POINTER(c_uint64)]),
     'SteamAPI_ISteamUGC_AddDependency': (c_uint64, [c_void_p, c_uint64, c_uint64]),
+    'SteamAPI_ISteamUGC_RemoveDependency': (c_uint64, [c_void_p, c_uint64, c_uint64]),
     'SteamAPI_ISteamUtils_IsAPICallCompleted': (c_bool, [c_void_p, c_uint64, POINTER(c_bool)]),
     'SteamAPI_ISteamUtils_GetAPICallResult': (c_bool, [c_void_p, c_uint64, c_void_p, c_int, c_int, POINTER(c_bool)]),
     'SteamAPI_ISteamUtils_GetAPICallFailureReason': (c_int, [c_void_p, c_uint64]),
@@ -294,9 +295,18 @@ class Steam:
         raw = self.wait(self.api.SteamAPI_ISteamUGC_AddDependency(self.ugc, parent, child), CB_DEPENDENCY, (24,))
         return int.from_bytes(raw[0:4], 'little')
 
+    def unrequire(self, parent, child):
+        raw = self.wait(self.api.SteamAPI_ISteamUGC_RemoveDependency(self.ugc, parent, child), CB_UNDEPENDENCY, (24,))
+        return int.from_bytes(raw[0:4], 'little')
+
 
 def result(code):
     return '%d %s' % (code, ERESULT.get(code, ''))
+
+
+def unlinked(code):
+    """RemoveDependency's answer; a link that was never there comes back as a failure code."""
+    return 'removed' if code == 1 else 'was not there (%s)' % result(code)
 
 
 def linked(code):
@@ -323,7 +333,7 @@ def check(steam, packer, its, fields):
         if page:
             if page.get('title') != i['title']:
                 print('    title differs: live %r' % page.get('title'))
-            if page.get('description', '').replace('\r\n', '\n').strip() != i['description'].replace('\r\n', '\n').strip():
+            if same_text(page.get('description', '')) != same_text(i['description']):
                 print('    description differs from the packer')
             if STEAM_VISIBILITY.get(i['visibility']) != page.get('visibility'):
                 print('    visibility: live %s, the packer says %s' % (VISIBILITY_NAME.get(page.get('visibility')),
@@ -351,8 +361,23 @@ def upload(steam, its, fields, note):
     after = live([i['id'] for i in its])
     for i in its:
         b, a = before.get(i['id']), after.get(i['id'])
-        if a and b:
-            print('%-18s %s' % (i['key'], 'updated on Steam' if a['time_updated'] > b['time_updated'] else 'Steam still shows the old time - check the page'))
+        if not (a and b):
+            continue
+        # Steam moves time_updated for a new preview or new files only, not for a text edit:
+        # text is checked by comparing it, the rest by the time
+        wrong = []
+        if 'title' in fields and a.get('title') != i['title']:
+            wrong.append('title')
+        if 'description' in fields and same_text(a.get('description', '')) != same_text(i['description']):
+            wrong.append('description')
+        if ('preview' in fields or 'content' in fields) and not a['time_updated'] > b['time_updated']:
+            wrong.append('update time')
+        print('%-18s %s' % (i['key'], 'live on Steam' if not wrong else
+                            'Steam does not show the new %s yet - check the page in a minute' % ' / '.join(wrong)))
+
+
+def same_text(s):
+    return s.replace('\r\n', '\n').strip()
 
 
 def create(steam, its):
@@ -389,6 +414,8 @@ def collection(steam, packer, note):
     print('collection %d page: %s%s' % (cid, result(code), ' - ' + LEGAL if legal else ''))
     for child in c['items']:
         print('    + %d: %s' % (child, linked(steam.require(cid, child))))
+    for child in c.get('retired', []):
+        print('    - %d: %s' % (child, unlinked(steam.unrequire(cid, child))))
     print('https://steamcommunity.com/sharedfiles/filedetails/?id=%d' % cid)
 
 
@@ -399,6 +426,9 @@ def required(steam, its):
                 print('%s -> %s: not on Steam yet, skipped' % (i['key'], child))
                 continue
             print('%s (%d) requires %d: %s' % (i['key'], i['id'], child, linked(steam.require(i['id'], child))))
+        for child in i.get('retired', []):
+            if on_steam(i):
+                print('%s (%d) no longer requires %d: %s' % (i['key'], i['id'], child, unlinked(steam.unrequire(i['id'], child))))
 
 
 def main():
