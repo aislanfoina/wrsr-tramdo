@@ -8,16 +8,20 @@ traps that already cost time. `README.md` is the player-facing page.
 
 ## 1. What this is
 
-A mod for **Workers & Resources: Soviet Republic 1.2.0.8** (`SOVIET64.exe`, image base
+A mod for **Workers & Resources: Soviet Republic 1.2.0.9** (`SOVIET64.exe`, image base
 0x140000000; every address the plugin uses is an RVA valid for this build only - ported from
-1.1.1.9 via 1.1.1.13 on 2026-11-24, see section 6; not yet run in game on 1.2.0.8): a distribution office for
+1.1.1.9 via 1.1.1.13 and 1.2.0.8 on 2026-11-24/25, see section 6; on 1.2.0.9 its three hooks install
+in game and the tram length check is recognised): a distribution office for
 **cargo trams**. The game's road distribution office plans and dispatches the trams natively; the
 `tramdo` plugin (C++, MSVC x64, /MT) only lets trams in and removes one fuel check. Two buildings,
 `tramdo_small` (the tram end station's layout, 6 lanes, tram sets up to 30 m) and `tramdo_large`
 (the big tram depot's, 8 lanes stretched to 50 m, all sets). One tram set per parking lane. Runs on **Republic Mod Loader (RML)** (TesmioLoader API 3/4); RML now ships in the **WRSR
-Ultimate Pack** (Workshop 3838038411, another modder's item, built for 1.1.1.13; no 1.2.0.8 release
-on 2026-11-24); the original RML item 3787969749 is gone. **Hooks never chain onto unknown bytes**
-since 2026-11-24 (the 1.1.1.9 build on the Workshop does, and hooked three wrong addresses on 1.2.0.8).
+Ultimate Pack** (Workshop 3838038411, another modder's item, built for 1.1.1.13; its RML core runs
+1.2.0.9, its own plugins do not - test with them off, see the Space Race AGENTS.md section 9 for the
+loader config); the original RML item 3787969749 is gone. **Hooks never chain onto unknown bytes**
+since 2026-11-24 (the 1.1.1.9 build on the Workshop does, and hooked three wrong addresses on 1.2.0.8
+and on 1.2.0.9). Its development build and the subscribed item share the plugin id `tram-do.tramdo`:
+in a test keep the subscribed item out of the loader playlist, or both load.
 
 Cargo trams come from other authors' mods (e.g. collection 3586298879: tram packs 3563301077,
 3586205860, tram cargo stations 3563264112, 3586206025). Stay compatible; never bundle them.
@@ -71,18 +75,18 @@ building type 0x2B) **with `$SUBTYPE_TRAM`** on a tram-depot layout. The train o
 railway sidings ("Building needs rail connection"); a road office without the subtype finds no
 route for its trams.
 
-**Plugin, hook 1 - CanUseBuilding 0x4019C0**(game, building, vehicle type, flag, x): asked by the
+**Plugin, hook 1 - CanUseBuilding 0x401C70**(game, building, vehicle type, flag, x): asked by the
 purchase list, vehicle assignment and production-line delivery. For buildings whose object name
 starts with `object_prefix` (`tramdo`) the plugin answers: cargo vehicles of the "tram" train group
 yes (cargo class at vt+0x8650 != PASSANGER 7), all else no; plus `limit_<object> = metres` (set
-length via the game's 0x277520). Everything else chains to the original.
+length via the game's 0x2773D0). Everything else chains to the original.
 
-**Plugin, hook 2 - road office update 0x1E03E0**(game, building): with fuel on (game+0x5D8 == 2) it
+**Plugin, hook 2 - road office update 0x1E02E0**(game, building): with fuel on (game+0x5D8 == 2) it
 skips vehicles whose fuel (vehicle+0x5F0) is <= 0 and tries to refuel them; electric vehicles keep
 +0x5F0 = 0, so trams never left. For our offices only, the plugin sets game+0x5D8 = 0 around the
 original call. Assumes building updates do not run in parallel threads.
 
-**Plugin, hook 3 - missing research 0x315A10**(game, building descriptor): fills game +0x11828
+**Plugin, hook 3 - missing research 0x315C50**(game, building descriptor): fills game +0x11830
 (std::vector of research records) with the researches still blocking a building; the build menu
 treats a non-empty list as locked. A road office unlocks with `distribution_office` (it unlocks
 building type 0x2B); for our offices the plugin appends the `research` setting's record
@@ -107,11 +111,13 @@ search (`find_spot`, `obstacles`) finds room clear of every path, track, wire an
 
 ## 6. Engine facts used
 
-Offsets and the addresses the plugin uses are **1.2.0.8** (checked by `tools/port_scan.py --verify`;
-not yet run in game on 1.2.0.8). That update moved data and structures too: the 1.2.0.8 values
-below came from the new code (see the Space Race AGENTS.md, section 6, for the method). The
-research-trail addresses marked *(1.1.1.9)* were not re-derived: they are a starting point, not an
-address (1.2.0.8 moved that region of code by about +0x1A000).
+Offsets and the addresses the plugin uses are **1.2.0.9** (checked by `tools/port_scan.py --verify`;
+hooks installed in game 2026-11-25). 1.2.0.8 moved data and structures; its values came from the new
+code alone (see the Space Race AGENTS.md, section 6, for the method). 1.2.0.9 came from pairing the
+1.2.0.8 and 1.2.0.9 executables with `tools/port_pair.py`: code moved -0x170..+0x2D0, the game
+object's research and blocking vectors +8, everything else here unchanged. The addresses marked
+*(1.1.1.9)* were not re-derived: they are a starting point, not an address (1.2.0.8 moved that
+region of code by about +0x1A000).
 
 - Trams are rail vehicles: `$TYPE VEHICLETYPE_RAIL_LOCOMOTIVE` + `$TRAINGROUP_TRAM`, wagons via
   `$TRAINSET`; they use road infrastructure (tram depot = `$TYPE_ROADDEPO` + `$SUBTYPE_TRAM`; tram
@@ -124,8 +130,8 @@ address (1.2.0.8 moved that region of code by about +0x1A000).
   6 SHIP, 8 AIRPLANE, 10 HELI); +0x7AA4 length (float, m); +0x7C58/+0x7C60 `$TRAINSET` vector,
   0x110-byte entries (name; resolved wagon type at +0x100); +0x8650 cargo class (COVERED 0 ..
   PASSANGER 7 .. WASTE 17, 18 none), +0x8654 capacity; +0x9708 std::vector<int> train groups.
-- 0x277AA0(game = exe+0xA1EF20, "tram") = the tram group id (66 callers pass "tram", "metro", ...).
-- 0x277520(vt) = set length: vt+0x7AA4 (coupler adjustments when vt+0x7AB0 > 0) plus each
+- 0x277950(game = exe+0xA1EF20, "tram") = the tram group id (66 callers pass "tram", "metro", ...).
+- 0x2773D0(vt) = set length: vt+0x7AA4 (coupler adjustments when vt+0x7AB0 > 0) plus each
   `$TRAINSET` wagon's +0x7AA4. The train office compares the same sum with its max train length
   (office +0xD70; +0xD74 min wagons) in the matcher 0x1DE2B0 *(1.1.1.9)*.
 - Office planning *(1.1.1.9)*: 0x1C6050 -> 0x1E2380 (transfers into office +0xD58, 128-byte records) ->
@@ -135,11 +141,11 @@ address (1.2.0.8 moved that region of code by about +0x1A000).
   conveyor transfer building.
 - Dispatch *(1.1.1.9)*: 0x1E5350(game, vehicle, office) -> 0x1E5480 / 0x1E5BA0 (route) -> 0x6B8EB0 (start).
 - Matcher 0x1DE2B0 *(1.1.1.9)* gives waste transfers only to cargo class 0x11 vehicles.
-- Research: records in game +0x11778/+0x11780 (= exe+0x9E6688), 0xE8 bytes: name +0 (inline),
-  +0x60/+0x68 buildings it unlocks (all must be done), +0x78/+0x80 one-is-enough unlocks,
-  +0xA8/+0xB0 used by 0x2F7960 *(1.1.1.9)*, progress +0xD0 (>= 1.0 done). The parser 0x2F3C60 *(1.1.1.9)* resolves
+- Research: records in game +0x11818/+0x11820, 0x138 bytes (128 in a new 1.2.0.9 game, checked live):
+  name +0 (inline), progress +0x120 (>= 1.0 done). *(1.1.1.9, 0xE8-byte records:* +0x60/+0x68 buildings
+  it unlocks (all must be done), +0x78/+0x80 one-is-enough unlocks, +0xA8/+0xB0 used by 0x2F7960*)*. The parser 0x2F3C60 *(1.1.1.9)* resolves
   `$UNLOCK_BUILDING_TYPE` / `_STYLE_FLAG` (descriptor +0x20D) to descriptor pointers at load.
-  Building descriptors: exe+0x9E6A30 vector, 0xBE8 bytes, ident +0, type +0x360. game +0x1090 set
+  Building descriptors: table at exe+0xA30AF0, 0xE98 bytes, ident +0, type +0x368. game +0x10C0 set
   = research off. Unlocks: distribution_office -> type 43 (0x2B), railway_distribution_office -> 52.
 - "Some buildings have unsupported settings" / "unsupported with unloading" = status text from
   0x741170 *(1.1.1.9)* (road office): UI only, dispatch still works.

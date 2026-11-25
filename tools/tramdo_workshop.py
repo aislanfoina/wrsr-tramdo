@@ -39,7 +39,7 @@ PREVIEWS = os.path.join(ROOT, 'build', 'tramdo')
 
 # key: (folder, Steam item id, item type, name). Created in the game 2026-10-05 (was local 9000310).
 ITEMS = {
-    'tram_do': ('mod/packages/tram_do', 3814373926, 'WORKSHOP_ITEMTYPE_BUILDING', 'Tram Distribution Office [1.2.0.8]'),
+    'tram_do': ('mod/packages/tram_do', 3814373926, 'WORKSHOP_ITEMTYPE_BUILDING', 'Tram Distribution Office [1.2.0.9]'),
 }
 OBJECTS = {'tram_do': ['tramdo_small', 'tramdo_large']}
 TAGS = {'tram_do': 13}          # the create form's tag bits as the game writes them: 13 = Depot
@@ -70,7 +70,7 @@ Both unlock with the [b]Railway distribution office[/b] research. They have a br
 [*]Run Republic Mod Loader (RepublicModLoader.exe in the pack's folder), enable this item and its [b]tramdo[/b] plugin, and launch.
 [*]Build the office on your tram network, buy cargo trams in its window (or move trams in), and give it tasks like any distribution office: the tram cargo stations to load at and to unload at.
 [/olist]
-Requires Workers & Resources: Soviet Republic [b]1.2.0.8[/b]: the plugin patches this exact build.
+Requires Workers & Resources: Soviet Republic [b]1.2.0.9[/b]: the plugin patches this exact build.
 
 [h2]GOOD TO KNOW[/h2]
 [list]
@@ -82,7 +82,7 @@ Requires Workers & Resources: Soviet Republic [b]1.2.0.8[/b]: the plugin patches
 [/list]
 
 [h2]STATUS[/h2]
-Updated for game version 1.2.0.8. Tested with open, covered, aggregate and waste trams. Fluid trams should work the same way but have not been tried yet. Reports are welcome on GitHub or below.
+Updated for game version 1.2.0.9. Tested with open, covered, aggregate and waste trams. Fluid trams should work the same way but have not been tried yet. Reports are welcome on GitHub or below.
 
 '''
 
@@ -137,7 +137,7 @@ def poster():
     lf = T.font(42, 'SemiBold')
     lw = d.textbbox((0, 0), label, font=lf)[2] / T.SS
     T.ribbon(d, ((T.SIZE - lw) / 2, bottom + 24), label, lf)
-    T.stamp(im, (T.SIZE - 150, 545), 78, ' TRAM DO · МОД · 2 YARDS ·', '1.2.0.8')
+    T.stamp(im, (T.SIZE - 150, 545), 78, ' TRAM DO · МОД · 2 YARDS ·', '1.2.0.9')
     T.frame(im)
     # No paper grain: the game re-encodes the preview itself when it uploads (an RGB PNG about as
     # big as zlib level 6 makes), and the grain's noise pushed the poster to 1,063,902 bytes -

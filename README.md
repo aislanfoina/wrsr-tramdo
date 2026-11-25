@@ -71,7 +71,7 @@ tasks, and sends a tram whenever a station has goods to move. No fixed routes, n
 
 ## REQUIREMENTS
 
-- Workers & Resources: Soviet Republic **1.2.0.8** (`SOVIET64.exe`). The plugin patches this exact
+- Workers & Resources: Soviet Republic **1.2.0.9** (`SOVIET64.exe`). The plugin patches this exact
   build and refuses to hook anything it does not recognise.
 - Republic Mod Loader for that build (it ships in the [WRSR Ultimate Pack](https://steamcommunity.com/sharedfiles/filedetails/?id=3838038411).
 - Cargo trams from a tram mod (the base game has passenger trams only).

@@ -1,5 +1,5 @@
 // tramdo - a tram distribution office: the game's road distribution office, for cargo trams.
-// Game build: 1.2.0.8 (ported 2026-11-24 via 1.1.1.13; tools/port_scan.py --verify checks the hooks).
+// Game build: 1.2.0.9 (ported 2026-11-25 from 1.2.0.8, which came via 1.1.1.13; tools/port_scan.py --verify checks the hooks).
 //
 // Trams are rail vehicles to the engine (VEHICLETYPE_RAIL_LOCOMOTIVE / _RAIL_VAGON in the "tram"
 // train group) but use road infrastructure: the tram depot is a road depot with $SUBTYPE_TRAM, tram
@@ -43,9 +43,9 @@
 
 static const TsmHost* H;
 
-#define RVA_CAN_USE     0x4019C0 // v1.2.0.8; was 0x3E2840 in 1.1.1.13
-#define RVA_GROUP_ID    0x277AA0 // v1.2.0.8; was 0x25C730 in 1.1.1.13
-#define RVA_SET_LENGTH  0x277520        // v1.2.0.8; was 0x25C1F0 in 1.1.1.13. float (vehicle type): its length plus its $TRAINSET wagons'
+#define RVA_CAN_USE     0x401C70 // v1.2.0.9; was 0x4019C0 in 1.2.0.8, 0x3E2840 in 1.1.1.13
+#define RVA_GROUP_ID    0x277950 // v1.2.0.9; was 0x277AA0 in 1.2.0.8, 0x25C730 in 1.1.1.13
+#define RVA_SET_LENGTH  0x2773D0        // v1.2.0.9; was 0x277520 in 1.2.0.8, 0x25C1F0 in 1.1.1.13. float (vehicle type): its length plus its $TRAINSET wagons'
 #define RVA_GAME        0xA1EF20 // v1.2.0.8; was 0x9D4F10 in 1.1.1.13
 #define BLD_TYPEDESC    0x318
 #define TD_TYPE         0x368 // v1.2.0.8; was 0x360 in 1.1.1.13
@@ -54,7 +54,7 @@ static const TsmHost* H;
 #define VT_CARGO        0x8650          // v1.2.0.8; was 0x8600 in 1.1.1.13. RESOURCE_TRANSPORT_* class: COVERED 0 .. PASSANGER 7 .. WASTE 17, 18 none
 #define CARGO_PASSENGER 7
 #define TYPE_DO_RAIL    0x34
-#define RVA_DO_TICK     0x1E03E0        // v1.2.0.8; was 0x1C5FD0 in 1.1.1.13. road distribution office update (game, building)
+#define RVA_DO_TICK     0x1E02E0        // v1.2.0.9; was 0x1E03E0 in 1.2.0.8, 0x1C5FD0 in 1.1.1.13. road distribution office update (game, building)
 #define CTX_FUEL_MODE   0x5D8           // v1.2.0.8; was 0x5B0 in 1.1.1.13. 2 = vehicles use fuel
 
 static const unsigned char kDoTickPro[15] = { 0x48, 0x8B, 0xC4, 0x48, 0x89, 0x48, 0x08, 0x55, 0x53, 0x56, 0x57,
@@ -73,14 +73,14 @@ static GroupIdFn g_groupId;
 static SetLengthFn g_setLength;         // NULL when the bytes there are not this build's function: no limits
 static const unsigned char kSetLengthPro[16] = { 0x48, 0x89, 0x5C, 0x24, 0x08, 0xF3, 0x0F, 0x10, 0x91, 0xB0, 0x7A, 0x00, 0x00, 0x0F, 0x57, 0xC0 };
 
-#define RVA_MISSING_RESEARCH 0x315A10   // v1.2.0.8; was 0x2F7640 in 1.1.1.13. (game, building descriptor): researches blocking it -> game +0x11790
+#define RVA_MISSING_RESEARCH 0x315C50   // v1.2.0.9; was 0x315A10 in 1.2.0.8, 0x2F7640 in 1.1.1.13. (game, building descriptor): researches blocking it -> game +CTX_BLOCKING
 #define RVA_VEC_GROW    0x41E0          // v1.2.0.8; was 0x41A0 in 1.1.1.13. the game's grow-by-one for that std::vector<void*> (as RVA_MISSING_RESEARCH calls it);
-#define CTX_RESEARCH    0x11810         // v1.2.0.8; was 0x11778 in 1.1.1.13. std::vector of research records (0x138 bytes: name +0, progress +0x120)
-#define CTX_BLOCKING    0x11828         // v1.2.0.8; was 0x11790 in 1.1.1.13. begin, end, capacity
+#define CTX_RESEARCH    0x11818         // v1.2.0.9; was 0x11810 in 1.2.0.8, 0x11778 in 1.1.1.13. std::vector of research records (0x138 bytes: name +0, progress +0x120)
+#define CTX_BLOCKING    0x11830         // v1.2.0.9; was 0x11828 in 1.2.0.8, 0x11790 in 1.1.1.13. begin, end, capacity
 #define CTX_NO_RESEARCH 0x10C0          // v1.2.0.8; was 0x1090 in 1.1.1.13. set: research is off, everything is unlocked
 #define RES_SIZE        0x138 // v1.2.0.8; was 0xE8 in 1.1.1.13
 #define RES_PROGRESS    0x120 // v1.2.0.8; was 0xD0 in 1.1.1.13
-static const unsigned char kMissingPro[18] = { 0x4C, 0x8B, 0xDC, 0x53, 0x55, 0x41, 0x57, 0x48, 0x83, 0xEC, 0x50, 0x48, 0x8D, 0x99, 0x28, 0x18, 0x01, 0x00 };
+static const unsigned char kMissingPro[18] = { 0x4C, 0x8B, 0xDC, 0x53, 0x55, 0x41, 0x57, 0x48, 0x83, 0xEC, 0x50, 0x48, 0x8D, 0x99, 0x30, 0x18, 0x01, 0x00 };
 typedef void (*MissingFn)(unsigned char* game, unsigned char* td);
 typedef void (*VecGrowFn)(void* vec);
 static MissingFn g_origMissing;
