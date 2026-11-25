@@ -151,6 +151,13 @@ region of code by about +0x1A000).
   0x741170 *(1.1.1.9)* (road office): UI only, dispatch still works.
 - Fleet tally 0x1E1740 *(1.1.1.9)* counts vehicle kinds 1/6/8/10 only: kind 4 (trams) is not tallied, so the
   office may send more trams than a task needs. Not observed as a problem yet.
+- **Purchase list (1.2.0.9, function chunk 0x3FCCDA):** before asking CanUseBuilding it filters the
+  vehicle types by list mode: modes 1/5 skip types whose vt+0x860C is 0, modes 2/6 those whose
+  vt+0x8610 is 0 (trucks: +0x860C 4300/7000, +0x8610 0; every tram, vanilla or modded: +0x860C 0,
+  +0x8610 set). The office's "Purchase road vehicle" list is a road mode, so trams never reach
+  our hook and the list is empty - in 1.1.1.9 the same office offered them (section 9). Assignment
+  (0x2CE7F0, `gui_building_assign_ok/fail`): the single-vehicle path asks CanUseBuilding with no
+  kind gate; a multi-vehicle selection requires kind 1 (road) for each. Not re-tested in game.
 
 ## 7. Settings (`mod/plugins/tramdo/tramdo.ini`)
 
@@ -184,9 +191,21 @@ offices tramdo_a..d; retired 2026-10-07):
    a conveyor transfer between station and storage), waste (after the owner lowered a 20 % pickup
    threshold). Fluids untested.
 
+7. **Game 1.2.0.9, 2026-11-25**, the owner's save `a96` (backed up first; one `tramdo_small`, four
+   trams: H51 medium open, EU40 small aggregate, two H51 medium waste), only our plugins enabled
+   (see the Space Race AGENTS.md section 9 for the loader playlist): the office update hook ran
+   ("fuel mode 2 off"), the office showed its green tick and 4 vehicles, and the trams cycled -
+   over 90 s at fast speed one came in from 2.2 km to 127 m of the office and left again, one left
+   from 103 m to 1.8 km, one came within 86 m. The purchase window asked our hook about every
+   vehicle type (`train group "tram" = 11`, 40 refusals logged, then the log cap): the decision
+   data read from memory for all 49 tram-group locomotives gives exactly the designed result -
+   7 cargo sets of 21-26 m admitted, the long 37-41 m sets over the 30 m limit, 35 passenger trams
+   refused. **But the purchase list stayed empty**: the game's road-list filter drops trams before
+   asking (section 6). Not tested: assigning a tram, the yards, a full delivery cycle watched end
+   to end. `build/tramprobe.py` lists the offices and trams with positions.
+
 Still to test in game: the two yard buildings (placement, the game's track through the shed and
-the yard, buildings clear of it), the cargo-only filter (passenger trams refused) and the 30 m
-limit (the H51 large set refused by the small yard, medium sets admitted).
+the yard, buildings clear of it), assigning trams on 1.2.0.9, and buying them (see above).
 
 ## 10. Traps that already cost time
 
@@ -204,8 +223,12 @@ limit (the H51 large set refused by the small yard, medium sets admitted).
 
 ## 11. Status and open items
 
-- Core office: done (purchase, assignment, parking, dispatch, full cycles).
-- Yards, size limit, cargo-only filter: built, to be tested in game (section 9).
+- Core office: done on 1.1.1.9 (purchase, assignment, parking, dispatch, full cycles). On 1.2.0.9:
+  existing trams keep working; **buying trams in the office window does not** (the game's
+  purchase filter, section 6) - open: make the list offer them, or document buying at a tram
+  depot and assigning.
+- Size limit and cargo-only filter: decision data verified on 1.2.0.9 (section 9, test 7); yards
+  still to be tested in game.
 - Workshop: item 3814373926 created and uploaded (content, both yards + plugin) 2026-10-05,
   **unpublished**. To upload again: close the game and RML, `.\build.ps1 -Install`, start the game
   from Steam *without* RML (an item whose plugin DLL is loaded fails with Error code 2), Workshop ->
