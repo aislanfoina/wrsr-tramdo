@@ -151,11 +151,11 @@ region of code by about +0x1A000).
   0x741170 *(1.1.1.9)* (road office): UI only, dispatch still works.
 - Fleet tally 0x1E1740 *(1.1.1.9)* counts vehicle kinds 1/6/8/10 only: kind 4 (trams) is not tallied, so the
   office may send more trams than a task needs. Not observed as a problem yet.
-- **Purchase list (1.2.0.9, function chunk 0x3FCCDA):** before asking CanUseBuilding it filters the
-  vehicle types by list mode: modes 1/5 skip types whose vt+0x860C is 0, modes 2/6 those whose
-  vt+0x8610 is 0 (trucks: +0x860C 4300/7000, +0x8610 0; every tram, vanilla or modded: +0x860C 0,
-  +0x8610 set). The office's "Purchase road vehicle" list is a road mode, so trams never reach
-  our hook and the list is empty - in 1.1.1.9 the same office offered them (section 9). Assignment
+- **Purchase lists (1.2.0.9, function chunk 0x3FCCDA):** an office window has two buy buttons,
+  truck-$ and truck-₽ (the rouble sign looks like a P). Before asking CanUseBuilding, each list
+  drops the types without a price in its currency: $ lists (modes 1/5) need `$COST_USD` (vt+0x860C),
+  ₽ lists (modes 2/6) need `$COST_RUB` (vt+0x8610). The tram packs give only `$COST_RUB` (the H51s
+  `$COST_RUB 1`), so the trams are in the **₽ list only** - an empty $ list is expected. Assignment
   (0x2CE7F0, `gui_building_assign_ok/fail`): the single-vehicle path asks CanUseBuilding with no
   kind gate; a multi-vehicle selection requires kind 1 (road) for each. Not re-tested in game.
 
@@ -200,12 +200,13 @@ offices tramdo_a..d; retired 2026-10-07):
    vehicle type (`train group "tram" = 11`, 40 refusals logged, then the log cap): the decision
    data read from memory for all 49 tram-group locomotives gives exactly the designed result -
    7 cargo sets of 21-26 m admitted, the long 37-41 m sets over the 30 m limit, 35 passenger trams
-   refused. **But the purchase list stayed empty**: the game's road-list filter drops trams before
-   asking (section 6). Not tested: assigning a tram, the yards, a full delivery cycle watched end
-   to end. `build/tramprobe.py` lists the offices and trams with positions.
+   refused. The **₽** purchase list (the $ one is empty by design, section 6) showed exactly those
+   7 sets with their rouble prices, and buying the H51 medium open tram took 83,889 ₽ and created
+   the tram and its wagon. Not tested: assigning a tram, the yards, a full delivery cycle watched
+   end to end. `tools/dev/tramprobe.py` lists the offices and trams with positions.
 
 Still to test in game: the two yard buildings (placement, the game's track through the shed and
-the yard, buildings clear of it), assigning trams on 1.2.0.9, and buying them (see above).
+the yard, buildings clear of it) and assigning trams on 1.2.0.9.
 
 ## 10. Traps that already cost time
 
@@ -223,12 +224,11 @@ the yard, buildings clear of it), assigning trams on 1.2.0.9, and buying them (s
 
 ## 11. Status and open items
 
-- Core office: done on 1.1.1.9 (purchase, assignment, parking, dispatch, full cycles). On 1.2.0.9:
-  existing trams keep working; **buying trams in the office window does not** (the game's
-  purchase filter, section 6) - open: make the list offer them, or document buying at a tram
-  depot and assigning.
-- Size limit and cargo-only filter: decision data verified on 1.2.0.9 (section 9, test 7); yards
-  still to be tested in game.
+- Core office: done on 1.1.1.9 (purchase, assignment, parking, dispatch, full cycles). On 1.2.0.9
+  (section 9, test 7): existing trams keep working, the ₽ purchase list offers the admitted sets
+  and buying works.
+- Size limit and cargo-only filter: verified on 1.2.0.9 (the ₽ list shows only the 7 cargo sets
+  within 30 m); yards still to be tested in game.
 - Workshop: item 3814373926 created and uploaded (content, both yards + plugin) 2026-10-05,
   **unpublished**. To upload again: close the game and RML, `.\build.ps1 -Install`, start the game
   from Steam *without* RML (an item whose plugin DLL is loaded fails with Error code 2), Workshop ->

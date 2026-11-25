@@ -68,7 +68,7 @@ Both unlock with the [b]Railway distribution office[/b] research. They have a br
 [olist]
 [*]Subscribe to this item and to the [url=%(rml)s]WRSR Ultimate Pack[/url], which carries Republic Mod Loader (its own plugins can be switched off). You also need cargo trams, for example the [url=%(trams)s]cargo tram collection[/url] this office was built and tested with.
 [*]Run Republic Mod Loader (RepublicModLoader.exe in the pack's folder), enable this item and its [b]tramdo[/b] plugin, and launch.
-[*]Build the office on your tram network, buy cargo trams in its window (or move trams in), and give it tasks like any distribution office: the tram cargo stations to load at and to unload at.
+[*]Build the office on your tram network, buy cargo trams in its window with the rouble (₽) purchase button (the tram packs have no dollar price, so the $ list stays empty), or move trams in, and give it tasks like any distribution office: the tram cargo stations to load at and to unload at.
 [/olist]
 Requires Workers & Resources: Soviet Republic [b]1.2.0.9[/b]: the plugin patches this exact build.
 
