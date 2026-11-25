@@ -304,7 +304,7 @@ def package_poster(key='package', tagline='BEAT APOLLO 11\nTO THE MOON', banner=
     text(d, (52, 40), 'SPACE\nRACE', font(196), offset=9, spacing=-38)
     y = ribbon(d, (68, 482), 'КОСМИЧЕСКАЯ ГОНКА', font(40, 'SemiBold'))
     text(d, (56, y + 22), tagline, font(46, 'SemiBold'), offset=4, spacing=2)
-    stamp(im, (178, 762), 86, ' SPACE RACE · МОД · 1957–1969 ·', '1.1.1.13')
+    stamp(im, (178, 762), 86, ' SPACE RACE · МОД · 1957–1969 ·', '1.2.0.8')
     if banner:
         sash(im, banner)
     return finish(im, key)

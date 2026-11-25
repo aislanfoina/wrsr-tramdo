@@ -49,7 +49,7 @@ tasks, and sends a tram whenever a station has goods to move. No fixed routes, n
 ## HOW TO RUN IT
 
 1. Subscribe to the [WRSR Ultimate Pack](https://steamcommunity.com/sharedfiles/filedetails/?id=3838038411), which carries Republic Mod Loader
-   for 1.1.1.13 (another modder's item; its own plugins can be switched off), and to some cargo trams, for example the
+   (another modder's item; its own plugins can be switched off - check it supports your game version), and to some cargo trams, for example the
    [cargo tram collection](https://steamcommunity.com/workshop/filedetails/?id=3586298879) this
    office was built and tested with.
 2. Subscribe to [Tram Distribution Office](https://steamcommunity.com/sharedfiles/filedetails/?id=3814373926)
@@ -71,9 +71,9 @@ tasks, and sends a tram whenever a station has goods to move. No fixed routes, n
 
 ## REQUIREMENTS
 
-- Workers & Resources: Soviet Republic **1.1.1.13** (`SOVIET64.exe`). The plugin patches this exact
+- Workers & Resources: Soviet Republic **1.2.0.8** (`SOVIET64.exe`). The plugin patches this exact
   build and refuses to hook anything it does not recognise.
-- Republic Mod Loader for 1.1.1.13, in the [WRSR Ultimate Pack](https://steamcommunity.com/sharedfiles/filedetails/?id=3838038411).
+- Republic Mod Loader for that build (it ships in the [WRSR Ultimate Pack](https://steamcommunity.com/sharedfiles/filedetails/?id=3838038411).
 - Cargo trams from a tram mod (the base game has passenger trams only).
 
 ## BUILD AND INSTALL

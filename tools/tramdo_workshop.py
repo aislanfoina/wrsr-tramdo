@@ -28,7 +28,7 @@ OWNER = 76561198165729857
 VISIBILITY = 2                  # public (Steam shows it public); 0 would hide it on the next upload
 REPO = 'https://github.com/aislanfoina/wrsr-tramdo'
 IMAGES = REPO.replace('https://github.com/', 'https://raw.githubusercontent.com/') + '/main/docs/images/'
-# Republic Mod Loader for game 1.1.1.13 ships in the WRSR Ultimate Pack (by another modder); the original
+# Republic Mod Loader ships in the WRSR Ultimate Pack (by another modder); the original
 # RML item 3787969749 is gone from Steam. RETIRED: Required Items the upload tool removes.
 RML_ITEM = 3838038411
 RML = 'https://steamcommunity.com/sharedfiles/filedetails/?id=%d' % RML_ITEM
@@ -39,14 +39,14 @@ PREVIEWS = os.path.join(ROOT, 'build', 'tramdo')
 
 # key: (folder, Steam item id, item type, name). Created in the game 2026-10-05 (was local 9000310).
 ITEMS = {
-    'tram_do': ('mod/packages/tram_do', 3814373926, 'WORKSHOP_ITEMTYPE_BUILDING', 'Tram Distribution Office [1.1.1.13]'),
+    'tram_do': ('mod/packages/tram_do', 3814373926, 'WORKSHOP_ITEMTYPE_BUILDING', 'Tram Distribution Office [1.2.0.8]'),
 }
 OBJECTS = {'tram_do': ['tramdo_small', 'tramdo_large']}
 TAGS = {'tram_do': 13}          # the create form's tag bits as the game writes them: 13 = Depot
 REQUIRED = {'tram_do': [RML_ITEM]}
 
 FOOTER = '''[h2]LICENCE AND CREDITS[/h2]
-GPL-3.0, source code on GitHub: [url=%(repo)s]%(repo)s[/url]. The plugin builds against TesmioLoader by MaxLegend and runs on Republic Mod Loader by UltimateUniverse (for 1.1.1.13 in the [url=%(rml)s]WRSR Ultimate Pack[/url]). The cargo trams themselves come from other authors' mods; this office only runs them.
+GPL-3.0, source code on GitHub: [url=%(repo)s]%(repo)s[/url]. The plugin builds against TesmioLoader by MaxLegend and runs on Republic Mod Loader by UltimateUniverse (in the [url=%(rml)s]WRSR Ultimate Pack[/url]). The cargo trams themselves come from other authors' mods; this office only runs them.
 
 Workers & Resources: Soviet Republic is (c) 3Division. This is an independent fan-made mod, not affiliated with or endorsed by 3Division or Hooded Horse.''' % {'repo': REPO, 'rml': RML}
 
@@ -66,11 +66,11 @@ Both unlock with the [b]Railway distribution office[/b] research. They have a br
 
 [h2]HOW TO RUN IT[/h2]
 [olist]
-[*]Subscribe to this item and to the [url=%(rml)s]WRSR Ultimate Pack[/url], which carries Republic Mod Loader for 1.1.1.13 (its own plugins can be switched off). You also need cargo trams, for example the [url=%(trams)s]cargo tram collection[/url] this office was built and tested with.
+[*]Subscribe to this item and to the [url=%(rml)s]WRSR Ultimate Pack[/url], which carries Republic Mod Loader (its own plugins can be switched off). You also need cargo trams, for example the [url=%(trams)s]cargo tram collection[/url] this office was built and tested with.
 [*]Run Republic Mod Loader (RepublicModLoader.exe in the pack's folder), enable this item and its [b]tramdo[/b] plugin, and launch.
 [*]Build the office on your tram network, buy cargo trams in its window (or move trams in), and give it tasks like any distribution office: the tram cargo stations to load at and to unload at.
 [/olist]
-Requires Workers & Resources: Soviet Republic [b]1.1.1.13[/b]: the plugin patches this exact build.
+Requires Workers & Resources: Soviet Republic [b]1.2.0.8[/b]: the plugin patches this exact build.
 
 [h2]GOOD TO KNOW[/h2]
 [list]
@@ -82,7 +82,7 @@ Requires Workers & Resources: Soviet Republic [b]1.1.1.13[/b]: the plugin patche
 [/list]
 
 [h2]STATUS[/h2]
-Updated for game version 1.1.1.13. Tested with open, covered, aggregate and waste trams. Fluid trams should work the same way but have not been tried yet. Reports are welcome on GitHub or below.
+Updated for game version 1.2.0.8. Tested with open, covered, aggregate and waste trams. Fluid trams should work the same way but have not been tried yet. Reports are welcome on GitHub or below.
 
 '''
 
@@ -137,7 +137,7 @@ def poster():
     lf = T.font(42, 'SemiBold')
     lw = d.textbbox((0, 0), label, font=lf)[2] / T.SS
     T.ribbon(d, ((T.SIZE - lw) / 2, bottom + 24), label, lf)
-    T.stamp(im, (T.SIZE - 150, 545), 78, ' TRAM DO · МОД · 2 YARDS ·', '1.1.1.13')
+    T.stamp(im, (T.SIZE - 150, 545), 78, ' TRAM DO · МОД · 2 YARDS ·', '1.2.0.8')
     T.frame(im)
     # No paper grain: the game re-encodes the preview itself when it uploads (an RGB PNG about as
     # big as zlib level 6 makes), and the grain's noise pushed the poster to 1,063,902 bytes -
